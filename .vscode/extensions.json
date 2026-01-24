@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "usernamehw.errorlens",
+    "eamodio.gitlens",
+    "rangav.thunder-client",
+    "vivaxy.vscode-conventional-commits",
+    "firsttris.vscode-jest-runner",
+    "streetsidesoftware.code-spell-checker"
+  ]
+}

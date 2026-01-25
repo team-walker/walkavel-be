@@ -23,5 +23,5 @@ jobs:
       - name: Sync Labels
         uses: crazy-max/ghaction-github-labeler@v5
         with:
-          filename: .github/labels.json
+          yaml-file: .github/labels.json
           dry-run: false

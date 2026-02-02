@@ -1,0 +1,29 @@
+name: 🐞 Backend 버그 제보
+description: 서버 API, 데이터베이스 또는 백엔드 로직 버그를 제보합니다.
+title: '[BUG] '
+labels: ['bug', 'backend']
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 버그 설명
+      description: 어떤 문제가 발생했나요?
+    validations:
+      required: true
+  - type: input
+    id: endpoint
+    attributes:
+      label: API 엔드포인트 (필요 시)
+      placeholder: 예) POST /api/v1/auth/login
+  - type: textarea
+    id: input-data
+    attributes:
+      label: 입력 데이터 (Request body/params)
+      placeholder: 예) { "email": "test@test.com" }
+  - type: textarea
+    id: error-log
+    attributes:
+      label: 에러 로그 / 응답값
+      description: 서버 터미널 로그나 API 응답 메시지를 적어주세요.
+    validations:
+      required: true

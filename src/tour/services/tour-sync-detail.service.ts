@@ -29,8 +29,9 @@ export class TourSyncDetailService {
       .select('contentid, modifiedtime');
 
     if (listError || detailError) {
-      this.logger.error('Error fetching data for change detection');
-      return;
+      const message = `Error fetching data for change detection: ${listError?.message || detailError?.message}`;
+      this.logger.error(message);
+      throw new Error(message);
     }
 
     const detailMap = new Map(allDetails?.map((d) => [d.contentid, d.modifiedtime]) || []);

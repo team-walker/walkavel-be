@@ -26,9 +26,45 @@ export class TourApiService {
   ) {}
 
   /**
-   * 한국관광공사 API에서 기본 관광지 목록을 가져와 Entity로 변환하여 반환
+   * 한국관광공사 API에서 전체 관광지 목록을 페이지네이션하여 모두 가져옴
    */
-  async fetchTourItems(pageNo = 1, numOfRows = 800): Promise<LandmarkEntity[]> {
+  async fetchTourItems(numOfRows = 800): Promise<LandmarkEntity[]> {
+    const allItems: LandmarkEntity[] = [];
+    let pageNo = 1;
+
+    try {
+      // 1. 첫 페이지 조회로 전체 개수 확인
+      const { items, totalCount } = await this.fetchTourItemsByPage(pageNo, numOfRows);
+      allItems.push(...items);
+
+      if (totalCount <= numOfRows) {
+        return allItems;
+      }
+
+      const totalPages = Math.ceil(totalCount / numOfRows);
+      this.logger.log(`Total items: ${totalCount}, Total pages: ${totalPages}`);
+
+      // 2. 나머지 페이지 순회
+      for (pageNo = 2; pageNo <= totalPages; pageNo++) {
+        await new Promise((resolve) => setTimeout(resolve, 200)); // Rate limit 방지
+        const { items: pageItems } = await this.fetchTourItemsByPage(pageNo, numOfRows);
+        allItems.push(...pageItems);
+      }
+
+      return allItems;
+    } catch (e) {
+      this.logger.error(`Failed to fetch all tour items: ${String(e)}`);
+      throw e;
+    }
+  }
+
+  /**
+   * 특정 페이지의 관광지 목록 조회 (내부 사용)
+   */
+  private async fetchTourItemsByPage(
+    pageNo: number,
+    numOfRows: number,
+  ): Promise<{ items: LandmarkEntity[]; totalCount: number }> {
     const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
     const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
     const url = `${baseUrl}/areaBasedList2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&contentTypeId=12&areaCode=1&numOfRows=${numOfRows}&pageNo=${pageNo}&_type=json`;
@@ -37,20 +73,23 @@ export class TourApiService {
       this.logger.log(`Fetching tour list (Page: ${pageNo})...`);
       const response = await firstValueFrom(this.httpService.get<TourApiResponse>(url));
       const { data } = response;
+      const body = data?.response?.body;
 
-      const rawItems = data?.response?.body?.items?.item;
+      const rawItems = body?.items?.item;
+      const totalCount = body?.totalCount || 0;
 
       if (!rawItems) {
-        this.logger.warn('No items found');
-        return [];
+        this.logger.warn(`No items found on page ${pageNo}`);
+        return { items: [], totalCount };
       }
 
       const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+      const entities = items.map((item: TourApiItem) => LandmarkMapper.toLandmarkEntity(item));
 
-      return items.map((item: TourApiItem) => LandmarkMapper.toLandmarkEntity(item));
+      return { items: entities, totalCount };
     } catch (e) {
-      this.logger.error(`Failed to fetch tour items: ${String(e)}`);
-      throw e;
+      this.logger.error(`Failed to fetch tour page ${pageNo}: ${String(e)}`);
+      return { items: [], totalCount: 0 }; // Return an empty result in case of error
     }
   }
 

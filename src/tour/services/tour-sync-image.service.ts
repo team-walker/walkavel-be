@@ -29,8 +29,9 @@ export class TourSyncImageService {
     const { data: landmarks, error } = await supabase.from('landmark').select('contentid');
 
     if (error || !landmarks) {
-      this.logger.error(`Error fetching landmarks for image sync: ${error?.message}`);
-      return;
+      const message = `Error fetching landmarks for image sync: ${error?.message}`;
+      this.logger.error(message);
+      throw new Error(message);
     }
 
     // 3. 동기화 대상 선정: (이미지가 없는 것) OR (강제 업데이트 대상)

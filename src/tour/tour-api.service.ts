@@ -69,11 +69,24 @@ export class TourApiService {
   ): Promise<{ items: LandmarkEntity[]; totalCount: number }> {
     const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
     const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
-    const url = `${baseUrl}/areaBasedList2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&contentTypeId=12&areaCode=1&numOfRows=${numOfRows}&pageNo=${pageNo}&_type=json`;
+    const url = `${baseUrl}/areaBasedList2`;
 
     try {
       this.logger.log(`Fetching tour list (Page: ${pageNo})...`);
-      const response = await firstValueFrom(this.httpService.get<TourApiResponse>(url));
+      const response = await firstValueFrom(
+        this.httpService.get<TourApiResponse>(url, {
+          params: {
+            serviceKey,
+            MobileApp: 'AppTest',
+            MobileOS: 'ETC',
+            contentTypeId: 12,
+            areaCode: 1,
+            numOfRows,
+            pageNo,
+            _type: 'json',
+          },
+        }),
+      );
       const { data } = response;
       const body = data?.response?.body;
 
@@ -91,7 +104,7 @@ export class TourApiService {
       return { items: entities, totalCount };
     } catch (e) {
       this.logger.error(`Failed to fetch tour page ${pageNo}: ${String(e)}`);
-      return { items: [], totalCount: 0 }; // Return an empty result in case of error
+      throw e; // Rethrow error to stop sync process
     }
   }
 
@@ -101,11 +114,21 @@ export class TourApiService {
   async fetchLandmarkDetail(contentId: number): Promise<LandmarkDetailEntity | null> {
     const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
     const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
-    const url = `${baseUrl}/detailCommon2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&pageNo=1&numOfRows=10&contentId=${contentId}&_type=json`;
+    const url = `${baseUrl}/detailCommon2`;
 
     try {
       const response = await firstValueFrom(
-        this.httpService.get<TourApiNullableResponse<TourApiDetailItem>>(url),
+        this.httpService.get<TourApiNullableResponse<TourApiDetailItem>>(url, {
+          params: {
+            serviceKey,
+            MobileApp: 'AppTest',
+            MobileOS: 'ETC',
+            pageNo: 1,
+            numOfRows: 10,
+            contentId,
+            _type: 'json',
+          },
+        }),
       );
       const responseData = response.data;
 
@@ -129,11 +152,22 @@ export class TourApiService {
   async fetchLandmarkImages(contentId: number): Promise<LandmarkImageEntity[]> {
     const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
     const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
-    const url = `${baseUrl}/detailImage2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&pageNo=1&numOfRows=50&contentId=${contentId}&imageYN=Y&_type=json`;
+    const url = `${baseUrl}/detailImage2`;
 
     try {
       const response = await firstValueFrom(
-        this.httpService.get<TourApiNullableResponse<TourApiImageItem>>(url),
+        this.httpService.get<TourApiNullableResponse<TourApiImageItem>>(url, {
+          params: {
+            serviceKey,
+            MobileApp: 'AppTest',
+            MobileOS: 'ETC',
+            pageNo: 1,
+            numOfRows: 50,
+            contentId,
+            imageYN: 'Y',
+            _type: 'json',
+          },
+        }),
       );
       const responseData = response.data;
 
@@ -155,11 +189,22 @@ export class TourApiService {
   async fetchLandmarkIntro(contentId: number): Promise<LandmarkIntroEntity | null> {
     const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
     const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
-    const url = `${baseUrl}/detailIntro2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&pageNo=1&numOfRows=10&_type=json&contentTypeId=12&contentId=${contentId}`;
+    const url = `${baseUrl}/detailIntro2`;
 
     try {
       const response = await firstValueFrom(
-        this.httpService.get<TourApiNullableResponse<TourApiIntroItem>>(url),
+        this.httpService.get<TourApiNullableResponse<TourApiIntroItem>>(url, {
+          params: {
+            serviceKey,
+            MobileApp: 'AppTest',
+            MobileOS: 'ETC',
+            pageNo: 1,
+            numOfRows: 10,
+            _type: 'json',
+            contentTypeId: 12,
+            contentId,
+          },
+        }),
       );
       const responseData = response.data;
 

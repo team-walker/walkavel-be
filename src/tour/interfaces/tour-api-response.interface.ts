@@ -35,9 +35,9 @@ export interface TourApiImageItem {
   contentid: string;
   originimgurl: string;
   imgname: string;
-  smallimageurl: string;
-  cpyrhtDivCd: string;
-  serialnum: string;
+  smallimageurl?: string;
+  cpyrhtDivCd?: string;
+  serialnum?: string;
 }
 
 export interface TourApiIntroItem {

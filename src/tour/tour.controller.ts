@@ -1,5 +1,7 @@
 import { Controller, Get, Post } from '@nestjs/common';
+import { ApiResponse } from '@nestjs/swagger';
 
+import { SyncTourDetailResponseDto, SyncTourResponseDto } from './dto/sync-tour-response.dto';
 import { TourService } from './tour.service';
 
 @Controller('tour')
@@ -17,7 +19,8 @@ export class TourController {
   }
 
   @Post('sync/detail')
-  async syncTourDetail() {
+  @ApiResponse({ type: SyncTourDetailResponseDto })
+  async syncTourDetail(): Promise<SyncTourDetailResponseDto> {
     const updatedIds = await this.tourService.syncLandmarkDetails();
     return {
       success: true,
@@ -28,7 +31,8 @@ export class TourController {
   }
 
   @Post('sync/image')
-  async syncTourImage() {
+  @ApiResponse({ type: SyncTourResponseDto })
+  async syncTourImage(): Promise<SyncTourResponseDto> {
     await this.tourService.syncLandmarkImages();
     return {
       success: true,
@@ -37,7 +41,8 @@ export class TourController {
   }
 
   @Post('sync/intro')
-  async syncTourIntro() {
+  @ApiResponse({ type: SyncTourResponseDto })
+  async syncTourIntro(): Promise<SyncTourResponseDto> {
     await this.tourService.syncLandmarkIntros();
     return {
       success: true,

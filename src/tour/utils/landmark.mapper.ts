@@ -85,9 +85,9 @@ export class LandmarkMapper {
       contentid: parseInt(item.contentid, 10),
       originimgurl: item.originimgurl,
       imgname: item.imgname,
-      smallimageurl: item.smallimageurl,
-      cpyrhtdivcd: item.cpyrhtDivCd,
-      serialnum: item.serialnum,
+      smallimageurl: item.smallimageurl ?? null,
+      cpyrhtdivcd: item.cpyrhtDivCd ?? null,
+      serialnum: item.serialnum ?? null,
     };
   }
 

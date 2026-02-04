@@ -69,9 +69,9 @@ export class TourSyncDetailService {
     let processedCount = 0;
     const processedIds: number[] = [];
 
-    for (const landmark of toSync) {
+    for (const [index, landmark] of toSync.entries()) {
       this.logger.log(
-        `[${processedCount + 1}/${toSync.length}] Fetching detail for contentid: ${landmark.contentid}`,
+        `[${index + 1}/${toSync.length}] Fetching detail for contentid: ${landmark.contentid}`,
       );
 
       const detailRecord = await this.tourApiService.fetchLandmarkDetail(landmark.contentid);

@@ -39,7 +39,7 @@ export class TourService {
 
       this.logger.log('Phase 2: Starting detailed tour data synchronization...');
       // 상세 정보 동기화 시, 업데이트 된(또는 새로 추가된) contentId 목록을 반환받음
-      const changedContentIds = (await this.tourSyncDetailService.sync()) ?? [];
+      const changedContentIds = await this.tourSyncDetailService.sync();
       this.logger.log(
         `Phase 2: Detailed synchronization completed. (Updated ${changedContentIds.length} items)`,
       );

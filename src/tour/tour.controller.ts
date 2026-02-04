@@ -22,7 +22,7 @@ export class TourController {
     return {
       success: true,
       message: 'Landmark details synchronization completed',
-      updatedCount: updatedIds.length,
+      updatedCount: updatedIds?.length ?? 0,
       updatedIds,
     };
   }

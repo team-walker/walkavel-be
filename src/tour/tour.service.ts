@@ -1,6 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { SupabaseClient } from '@supabase/supabase-js';
 
+import { Database } from '../database.types';
 import { SupabaseService } from '../supabase/supabase.service';
 import { TourSyncDetailService } from './services/tour-sync-detail.service';
 import { TourSyncImageService } from './services/tour-sync-image.service';
@@ -101,6 +109,54 @@ export class TourService {
     if (error) {
       this.logger.error(`Error fetching landmarks: ${error.message}`);
       throw new Error(error.message);
+    }
+
+    return data;
+  }
+
+  async getLandmarksBySigungu(
+    sigunguCode: number,
+  ): Promise<Database['public']['Tables']['landmark']['Row'][]> {
+    if (!Number.isInteger(sigunguCode) || sigunguCode < 1) {
+      throw new BadRequestException('sigunguCode must be a positive integer');
+    }
+
+    const supabase = this.supabaseService.getClient() as unknown as SupabaseClient<Database>;
+    const { data, error } = await supabase
+      .from('landmark')
+      .select('*')
+      .eq('sigungucode', sigunguCode)
+      .order('title', { ascending: true });
+
+    if (error) {
+      this.logger.error(`Error fetching landmarks by sigunguCode: ${error.message}`);
+      throw new InternalServerErrorException('Failed to fetch landmarks');
+    }
+
+    return data ?? [];
+  }
+
+  async getLandmarkDetail(
+    contentId: number,
+  ): Promise<Database['public']['Tables']['landmark']['Row']> {
+    if (!Number.isInteger(contentId) || contentId < 1) {
+      throw new BadRequestException('contentId must be a positive integer');
+    }
+
+    const supabase = this.supabaseService.getClient() as unknown as SupabaseClient<Database>;
+    const { data, error } = await supabase
+      .from('landmark')
+      .select('*')
+      .eq('contentid', contentId)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.error(`Error fetching landmark detail: ${error.message}`);
+      throw new InternalServerErrorException('Failed to fetch landmark detail');
+    }
+
+    if (!data) {
+      throw new NotFoundException('Landmark not found');
     }
 
     return data;

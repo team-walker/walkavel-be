@@ -7,6 +7,7 @@ import { LandmarkDetailEntity, LandmarkEntity } from './interfaces/landmark.inte
 import { LandmarkImageEntity } from './interfaces/landmark-image.interface';
 import { LandmarkIntroEntity } from './interfaces/landmark-intro.interface';
 import {
+  TourApiAreaCodeItem,
   TourApiDetailItem,
   TourApiImageItem,
   TourApiIntroItem,
@@ -132,6 +133,31 @@ export class TourApiService {
     } catch (e) {
       this.logger.error(`Failed to fetch intro for contentid: ${contentId}: ${e}`);
       return null;
+    }
+  }
+
+  async fetchSigunguCodes(areaCode: number): Promise<TourApiAreaCodeItem[]> {
+    const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
+    const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
+    const url = `${baseUrl}/areaCode2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&pageNo=1&numOfRows=100&_type=json&areaCode=${areaCode}`;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get<TourApiNullableResponse<TourApiAreaCodeItem>>(url),
+      );
+      const responseData = response.data;
+
+      if (!responseData?.response?.body?.items?.item) {
+        return [];
+      }
+
+      const rawItems = responseData.response.body.items.item;
+      const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+
+      return items.filter((item) => item?.code && item?.name);
+    } catch (e) {
+      this.logger.error(`Failed to fetch sigungu codes for areaCode ${areaCode}: ${String(e)}`);
+      throw e;
     }
   }
 }

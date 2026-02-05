@@ -14,6 +14,27 @@ import { TourSyncDetailService } from './services/tour-sync-detail.service';
 import { TourSyncImageService } from './services/tour-sync-image.service';
 import { TourSyncIntroService } from './services/tour-sync-intro.service';
 import { TourSyncListService } from './services/tour-sync-list.service';
+import { TourApiService } from './tour-api.service';
+
+const SIDO_AREA_CODE_MAP: Record<string, number> = {
+  '\uC11C\uC6B8\uD2B9\uBCC4\uC2DC': 1,
+  '\uC778\uCC9C\uAD11\uC5ED\uC2DC': 2,
+  '\uB300\uC804\uAD11\uC5ED\uC2DC': 3,
+  '\uB300\uAD6C\uAD11\uC5ED\uC2DC': 4,
+  '\uAD11\uC8FC\uAD11\uC5ED\uC2DC': 5,
+  '\uBD80\uC0B0\uAD11\uC5ED\uC2DC': 6,
+  '\uC6B8\uC0B0\uAD11\uC5ED\uC2DC': 7,
+  '\uC138\uC885\uD2B9\uBCC4\uC790\uCE58\uC2DC': 8,
+  '\uACBD\uAE30\uB3C4': 31,
+  '\uAC15\uC6D0\uD2B9\uBCC4\uC790\uCE58\uB3C4': 32,
+  '\uCDA9\uCCAD\uBD81\uB3C4': 33,
+  '\uCDA9\uCCAD\uB0A8\uB3C4': 34,
+  '\uACBD\uC0C1\uBD81\uB3C4': 35,
+  '\uACBD\uC0C1\uB0A8\uB3C4': 36,
+  '\uC804\uBD81\uD2B9\uBCC4\uC790\uCE58\uB3C4': 37,
+  '\uC804\uB77C\uB0A8\uB3C4': 38,
+  '\uC81C\uC8FC\uD2B9\uBCC4\uC790\uCE58\uB3C4': 39,
+};
 
 @Injectable()
 export class TourService {
@@ -21,6 +42,7 @@ export class TourService {
 
   constructor(
     private readonly supabaseService: SupabaseService,
+    private readonly tourApiService: TourApiService,
     private readonly tourSyncListService: TourSyncListService,
     private readonly tourSyncDetailService: TourSyncDetailService,
     private readonly tourSyncImageService: TourSyncImageService,
@@ -114,51 +136,149 @@ export class TourService {
     return data;
   }
 
-  async getLandmarksBySigungu(
-    sigunguCode: number,
-  ): Promise<Database['public']['Tables']['landmark']['Row'][]> {
-    if (!Number.isInteger(sigunguCode) || sigunguCode < 1) {
-      throw new BadRequestException('sigunguCode must be a positive integer');
-    }
-
-    const supabase = this.supabaseService.getClient() as unknown as SupabaseClient<Database>;
-    const { data, error } = await supabase
-      .from('landmark')
-      .select('*')
-      .eq('sigungucode', sigunguCode)
-      .order('title', { ascending: true });
-
-    if (error) {
-      this.logger.error(`Error fetching landmarks by sigunguCode: ${error.message}`);
-      throw new InternalServerErrorException('Failed to fetch landmarks');
-    }
-
-    return data ?? [];
-  }
-
-  async getLandmarkDetail(
-    contentId: number,
-  ): Promise<Database['public']['Tables']['landmark']['Row']> {
+  async getLandmarkDetail(contentId: number): Promise<{
+    detail: Database['public']['Tables']['landmark_detail']['Row'];
+    images: Database['public']['Tables']['landmark_image']['Row'][];
+    intro: Database['public']['Tables']['landmark_intro']['Row'] | null;
+  }> {
     if (!Number.isInteger(contentId) || contentId < 1) {
       throw new BadRequestException('contentId must be a positive integer');
     }
 
     const supabase = this.supabaseService.getClient() as unknown as SupabaseClient<Database>;
-    const { data, error } = await supabase
-      .from('landmark')
-      .select('*')
-      .eq('contentid', contentId)
-      .maybeSingle();
+    const [detailResult, imagesResult, introResult] = await Promise.all([
+      supabase.from('landmark_detail').select('*').eq('contentid', contentId).maybeSingle(),
+      supabase.from('landmark_image').select('*').eq('contentid', contentId).order('id'),
+      supabase.from('landmark_intro').select('*').eq('contentid', contentId).maybeSingle(),
+    ]);
 
-    if (error) {
-      this.logger.error(`Error fetching landmark detail: ${error.message}`);
+    if (detailResult.error) {
+      this.logger.error(`Error fetching landmark detail: ${detailResult.error.message}`);
       throw new InternalServerErrorException('Failed to fetch landmark detail');
     }
 
-    if (!data) {
+    if (!detailResult.data) {
       throw new NotFoundException('Landmark not found');
     }
 
-    return data;
+    if (imagesResult.error) {
+      this.logger.error(`Error fetching landmark images: ${imagesResult.error.message}`);
+      throw new InternalServerErrorException('Failed to fetch landmark images');
+    }
+
+    if (introResult.error) {
+      this.logger.error(`Error fetching landmark intro: ${introResult.error.message}`);
+      throw new InternalServerErrorException('Failed to fetch landmark intro');
+    }
+
+    return {
+      detail: detailResult.data,
+      images: imagesResult.data ?? [],
+      intro: introResult.data ?? null,
+    };
+  }
+
+  async syncRegionSigunguMap() {
+    const supabase = this.supabaseService.getClient() as unknown as SupabaseClient<Database>;
+    let upsertCount = 0;
+
+    const targetSidoName = '\uC11C\uC6B8\uD2B9\uBCC4\uC2DC';
+    const targetAreaCode = SIDO_AREA_CODE_MAP[targetSidoName];
+    if (!targetAreaCode) {
+      throw new InternalServerErrorException('Target SIDO code is not configured');
+    }
+
+    const sigunguCodes = await this.tourApiService.fetchSigunguCodes(targetAreaCode);
+
+    if (sigunguCodes.length == 0) {
+      return { success: true, count: 0 };
+    }
+
+    const records = sigunguCodes.map((item: { code: string; name: string }) => ({
+      area_code: targetAreaCode,
+      sido_name: targetSidoName,
+      sigungu_code: Number.parseInt(item.code, 10),
+      sigungu_name: item.name,
+    }));
+
+    const { error } = await supabase
+      .from('region_sigungu_map')
+      .upsert(records, { onConflict: 'area_code,sigungu_code' });
+
+    if (error) {
+      this.logger.error(
+        `Error syncing region_sigungu_map (areaCode=${targetAreaCode}): ${error.message}`,
+      );
+      throw new InternalServerErrorException('Failed to sync region code map');
+    }
+
+    upsertCount += records.length;
+
+    return { success: true, count: upsertCount };
+  }
+
+  async getLandmarksByRegionNames(
+    sidoName: string,
+    sigunguName: string,
+  ): Promise<Database['public']['Tables']['landmark']['Row'][]> {
+    if (!sidoName || !sigunguName) {
+      throw new BadRequestException('sido and sigugun are required');
+    }
+
+    const areaCode = SIDO_AREA_CODE_MAP[sidoName];
+
+    if (!areaCode) {
+      throw new BadRequestException(`Unsupported SIDO name: ${sidoName}`);
+    }
+
+    const supabase = this.supabaseService.getClient() as unknown as SupabaseClient<Database>;
+
+    let { data: mapped, error: mappingError } = await supabase
+      .from('region_sigungu_map')
+      .select('area_code,sigungu_code')
+      .eq('sido_name', sidoName)
+      .eq('sigungu_name', sigunguName)
+      .maybeSingle();
+
+    if (mappingError) {
+      this.logger.error(`Error reading region_sigungu_map: ${mappingError.message}`);
+      throw new InternalServerErrorException('Failed to resolve region code');
+    }
+
+    if (!mapped) {
+      await this.syncRegionSigunguMap();
+      const retry = await supabase
+        .from('region_sigungu_map')
+        .select('area_code,sigungu_code')
+        .eq('sido_name', sidoName)
+        .eq('sigungu_name', sigunguName)
+        .maybeSingle();
+
+      mapped = retry.data;
+      mappingError = retry.error;
+    }
+
+    if (mappingError) {
+      this.logger.error(`Error reading region_sigungu_map after sync: ${mappingError.message}`);
+      throw new InternalServerErrorException('Failed to resolve region code');
+    }
+
+    if (!mapped) {
+      throw new NotFoundException('No region mapping found for the provided SIDO/SIGUGUN');
+    }
+
+    const { data: landmarks, error } = await supabase
+      .from('landmark')
+      .select('*')
+      .eq('areacode', mapped.area_code)
+      .eq('sigungucode', mapped.sigungu_code)
+      .order('title', { ascending: true });
+
+    if (error) {
+      this.logger.error(`Error fetching landmarks by mapped code: ${error.message}`);
+      throw new InternalServerErrorException('Failed to fetch landmarks');
+    }
+
+    return landmarks ?? [];
   }
 }

@@ -286,6 +286,36 @@ export interface Database {
           },
         ];
       };
+      region_sigungu_map: {
+        Row: {
+          id: number;
+          area_code: number;
+          sido_name: string;
+          sigungu_code: number;
+          sigungu_name: string;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: number;
+          area_code: number;
+          sido_name: string;
+          sigungu_code: number;
+          sigungu_name: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: number;
+          area_code?: number;
+          sido_name?: string;
+          sigungu_code?: number;
+          sigungu_name?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

@@ -60,6 +60,11 @@ export interface TourApiIntroItem {
   chkcreditcard: string;
 }
 
+export interface TourApiAreaCodeItem {
+  code: string;
+  name: string;
+}
+
 export interface TourApiResponse<T = TourApiItem> {
   response: {
     header: {

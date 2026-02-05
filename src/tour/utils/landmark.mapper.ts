@@ -8,6 +8,7 @@ import {
   TourApiItem,
 } from '../interfaces/tour-api-response.interface';
 import { parseBoolean } from './helpers/boolean.helper';
+import { parseSafeFloat, parseSafeInt } from './helpers/number.helper';
 import { parseTimestamp } from './helpers/timestamp.helper';
 
 export class LandmarkMapper {
@@ -16,28 +17,28 @@ export class LandmarkMapper {
    */
   static toLandmarkEntity(item: TourApiItem): LandmarkEntity {
     return {
-      contentid: parseInt(item.contentid, 10),
-      contenttypeid: parseInt(item.contenttypeid, 10),
+      contentid: parseSafeInt(item.contentid) ?? 0,
+      contenttypeid: parseSafeInt(item.contenttypeid) ?? 0,
       title: item.title,
       addr1: item.addr1,
       addr2: item.addr2,
       zipcode: item.zipcode,
       tel: item.tel,
-      areacode: parseInt(item.areacode, 10),
-      sigungucode: parseInt(item.sigungucode, 10),
+      areacode: parseSafeInt(item.areacode),
+      sigungucode: parseSafeInt(item.sigungucode),
       cat1: item.cat1,
       cat2: item.cat2,
       cat3: item.cat3,
-      mapx: parseFloat(item.mapx),
-      mapy: parseFloat(item.mapy),
-      mlevel: parseInt(item.mlevel, 10),
+      mapx: parseSafeFloat(item.mapx),
+      mapy: parseSafeFloat(item.mapy),
+      mlevel: parseSafeInt(item.mlevel),
       firstimage: item.firstimage,
       firstimage2: item.firstimage2,
       cpyrhtdivcd: item.cpyrhtDivCd,
       createdtime: parseTimestamp(item.createdtime),
       modifiedtime: parseTimestamp(item.modifiedtime),
-      ldongregncd: item.lDongRegnCd ? parseInt(item.lDongRegnCd, 10) : null,
-      ldongsigngucd: item.lDongSignguCd ? parseInt(item.lDongSignguCd, 10) : null,
+      ldongregncd: parseSafeInt(item.lDongRegnCd),
+      ldongsigngucd: parseSafeInt(item.lDongSignguCd),
       lclssystm1: item.lclsSystm1 ?? null,
       lclssystm2: item.lclsSystm2 ?? null,
       lclssystm3: item.lclsSystm3 ?? null,
@@ -49,28 +50,28 @@ export class LandmarkMapper {
    */
   static toLandmarkDetailEntity(item: TourApiDetailItem): LandmarkDetailEntity {
     return {
-      contentid: parseInt(item.contentid, 10),
-      contenttypeid: parseInt(item.contenttypeid, 10),
+      contentid: parseSafeInt(item.contentid) ?? 0,
+      contenttypeid: parseSafeInt(item.contenttypeid) ?? 0,
       title: item.title,
       addr1: item.addr1,
       addr2: item.addr2,
       zipcode: item.zipcode,
       tel: item.tel,
-      areacode: parseInt(item.areacode, 10),
-      sigungucode: parseInt(item.sigungucode, 10),
+      areacode: parseSafeInt(item.areacode),
+      sigungucode: parseSafeInt(item.sigungucode),
       cat1: item.cat1,
       cat2: item.cat2,
       cat3: item.cat3,
-      mapx: parseFloat(item.mapx),
-      mapy: parseFloat(item.mapy),
-      mlevel: parseInt(item.mlevel, 10),
+      mapx: parseSafeFloat(item.mapx),
+      mapy: parseSafeFloat(item.mapy),
+      mlevel: parseSafeInt(item.mlevel),
       firstimage: item.firstimage,
       firstimage2: item.firstimage2,
       cpyrhtdivcd: item.cpyrhtDivCd,
       createdtime: parseTimestamp(item.createdtime),
       modifiedtime: parseTimestamp(item.modifiedtime),
-      ldongregncd: item.lDongRegnCd ? parseInt(item.lDongRegnCd, 10) : null,
-      ldongsigngucd: item.lDongSignguCd ? parseInt(item.lDongSignguCd, 10) : null,
+      ldongregncd: parseSafeInt(item.lDongRegnCd),
+      ldongsigngucd: parseSafeInt(item.lDongSignguCd),
       lclssystm1: item.lclsSystm1 ?? null,
       lclssystm2: item.lclsSystm2 ?? null,
       lclssystm3: item.lclsSystm3 ?? null,
@@ -84,7 +85,7 @@ export class LandmarkMapper {
    */
   static toLandmarkImageEntity(item: TourApiImageItem): LandmarkImageEntity {
     return {
-      contentid: parseInt(item.contentid, 10),
+      contentid: parseSafeInt(item.contentid) ?? 0,
       originimgurl: item.originimgurl,
       imgname: item.imgname,
       smallimageurl: item.smallimageurl ?? null,
@@ -98,8 +99,8 @@ export class LandmarkMapper {
    */
   static toLandmarkIntroEntity(item: TourApiIntroItem): LandmarkIntroEntity {
     return {
-      contentid: parseInt(item.contentid, 10),
-      contenttypeid: parseInt(item.contenttypeid, 10),
+      contentid: parseSafeInt(item.contentid) ?? 0,
+      contenttypeid: parseSafeInt(item.contenttypeid) ?? 0,
       heritage1: item.heritage1 === '1',
       heritage2: item.heritage2 === '1',
       heritage3: item.heritage3 === '1',

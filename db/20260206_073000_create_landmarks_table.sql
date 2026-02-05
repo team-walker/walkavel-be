@@ -73,7 +73,7 @@ CREATE TABLE public.landmark_image (
   constraint landmark_image_contentid_fk foreign KEY (contentid) references landmark (contentid) on delete CASCADE
 ) TABLESPACE pg_default;
 CREATE TABLE public.landmark_intro (
-  contentid bigint NOT NULL UNIQUE,
+  contentid bigint NOT NULL,
   contenttypeid integer NOT NULL,
   heritage1 boolean DEFAULT false,
   heritage2 boolean DEFAULT false,
@@ -112,3 +112,5 @@ CREATE TABLE public.users (
   CONSTRAINT users_pkey PRIMARY KEY (id),
   CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
+
+

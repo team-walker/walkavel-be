@@ -286,6 +286,68 @@ export interface Database {
           },
         ];
       };
+      region_sigungu_map: {
+        Row: {
+          id: number;
+          area_code: number;
+          sigungu_code: number;
+          sigungu_name: string;
+          created_at: string | null;
+          updated_at: string | null;
+          sido_name: string;
+        };
+        Insert: {
+          id?: never;
+          area_code: number;
+          sigungu_code: number;
+          sigungu_name: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+          sido_name?: string;
+        };
+        Update: {
+          id?: never;
+          area_code?: number;
+          sigungu_code?: number;
+          sigungu_name?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+          sido_name?: string;
+        };
+        Relationships: [];
+      };
+      users: {
+        Row: {
+          id: string;
+          email: string | null;
+          nickname: string | null;
+          avatar_url: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id: string;
+          email?: string | null;
+          nickname?: string | null;
+          avatar_url?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          email?: string | null;
+          nickname?: string | null;
+          avatar_url?: string | null;
+          created_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'users_id_fkey';
+            columns: ['id'];
+            isOneToOne: true;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;

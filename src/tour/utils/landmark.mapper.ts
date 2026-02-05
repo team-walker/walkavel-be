@@ -17,7 +17,11 @@ export class LandmarkMapper {
    */
   static toLandmarkEntity(item: TourApiItem): LandmarkEntity {
     return {
-      contentid: parseSafeInt(item.contentid) ?? 0,
+      contentid:
+        parseSafeInt(item.contentid) ??
+        (() => {
+          throw new Error('Invalid contentid');
+        })(),
       contenttypeid: parseSafeInt(item.contenttypeid) ?? 0,
       title: item.title,
       addr1: item.addr1,

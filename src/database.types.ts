@@ -217,7 +217,6 @@ export interface Database {
       };
       landmark_intro: {
         Row: {
-          id: number;
           contentid: number;
           contenttypeid: number;
           heritage1: boolean | null;
@@ -237,7 +236,6 @@ export interface Database {
           chkcreditcard: boolean | null;
         };
         Insert: {
-          id?: number;
           contentid: number;
           contenttypeid: number;
           heritage1?: boolean | null;
@@ -257,7 +255,6 @@ export interface Database {
           chkcreditcard?: boolean | null;
         };
         Update: {
-          id?: number;
           contentid?: number;
           contenttypeid?: number;
           heritage1?: boolean | null;

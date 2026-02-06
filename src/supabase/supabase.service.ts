@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, OnModuleInit } from '@nestjs/common'; // 1. InternalServerErrorException 추가
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
@@ -15,7 +15,7 @@ export class SupabaseService implements OnModuleInit {
     const supabaseKey = this.configService.get<string>('SUPABASE_PUBLISHABLE_API_KEY') ?? '';
 
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase URL and Key must be provided in .env');
+      throw new InternalServerErrorException('Supabase URL and Key must be provided in .env');
     }
 
     this.supabase = createClient<Database>(supabaseUrl, supabaseKey);

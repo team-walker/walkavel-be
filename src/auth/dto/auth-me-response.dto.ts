@@ -1,13 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 class UserResponseDto {
   @ApiProperty({ example: 'uuid-1234', description: '사용자 UUID' })
   id: string;
 
-  @ApiProperty({ example: 'user@example.com', description: '사용자 이메일' })
+  @ApiPropertyOptional({ example: 'user@example.com', description: '사용자 이메일' })
   email?: string;
 
-  @ApiProperty({ example: '2025-06-13T...', description: '마지막 로그인 시각' })
+  @ApiPropertyOptional({ example: '2025-06-13T00:00:00Z', description: '마지막 로그인 시각' })
   last_sign_in_at?: string;
 }
 

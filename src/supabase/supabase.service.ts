@@ -11,7 +11,6 @@ export class SupabaseService implements OnModuleInit {
   constructor(private configService: ConfigService) {}
 
   onModuleInit() {
-    // develop의 최신 키 명칭(SERVICE_ROLE_KEY)을 사용하되, 내 코드의 안전한 에러 처리를 유지합니다.
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL') ?? '';
     const supabaseKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 

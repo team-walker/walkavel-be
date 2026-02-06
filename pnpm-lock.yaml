@@ -7,7 +7,7 @@ overrides:
 dependencies:
   '@nestjs/axios':
     specifier: ^4.0.1
-    version: 4.0.1(@nestjs/common@11.1.12)(axios@1.13.4)(rxjs@7.8.2)
+    version: 4.0.1(@nestjs/common@11.1.12)(axios@1.7.2)(rxjs@7.8.2)
   '@nestjs/common':
     specifier: ^11.1.12
     version: 11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -606,7 +606,7 @@ packages:
     engines: {node: '>=v18'}
     dependencies:
       '@commitlint/types': 19.8.1
-      semver: 7.7.3
+      semver: 7.7.4
     dev: true
 
   /@commitlint/lint@19.8.1:
@@ -1432,7 +1432,7 @@ packages:
     dev: true
     optional: true
 
-  /@nestjs/axios@4.0.1(@nestjs/common@11.1.12)(axios@1.13.4)(rxjs@7.8.2):
+  /@nestjs/axios@4.0.1(@nestjs/common@11.1.12)(axios@1.7.2)(rxjs@7.8.2):
     resolution: {integrity: sha512-68pFJgu+/AZbWkGu65Z3r55bTsCPlgyKaV4BSG8yUAD72q1PPuyVRgUwFv6BxdnibTUHlyxm06FmYWNC+bjN7A==}
     peerDependencies:
       '@nestjs/common': ^10.0.0 || ^11.0.0
@@ -2105,7 +2105,7 @@ packages:
       '@typescript-eslint/visitor-keys': 8.54.0
       debug: 4.4.3
       minimatch: 9.0.5
-      semver: 7.7.3
+      semver: 7.7.4
       tinyglobby: 0.2.15
       ts-api-utils: 2.4.0(typescript@5.9.3)
       typescript: 5.9.3
@@ -2602,8 +2602,8 @@ packages:
   /asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
-  /axios@1.13.4:
-    resolution: {integrity: sha512-1wVkUaAO6WyaYtCkcYCOx12ZgpGf9Zif+qXa4n+oYzK558YryKqiL6UWwd5DqiH3VRW0GYhTZQ/vlgJrCoNQlg==}
+  /axios@1.7.2:
+    resolution: {integrity: sha512-2A8QhOMrbomlDuiLeK9XibIBzuHeRcqqNOHp0Cyp5EoJ1IFDh+XZH3A6BkXtv0K4gFGCI0Y4BM7B1wOEi0Rmgw==}
     dependencies:
       follow-redirects: 1.15.11
       form-data: 4.0.5
@@ -3727,7 +3727,7 @@ packages:
       minimatch: 3.1.2
       node-abort-controller: 3.1.1
       schema-utils: 3.3.0
-      semver: 7.7.3
+      semver: 7.7.4
       tapable: 2.3.0
       typescript: 5.9.3
       webpack: 5.104.1
@@ -4129,7 +4129,7 @@ packages:
       '@babel/parser': 7.29.0
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.2
-      semver: 7.7.3
+      semver: 7.7.4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -4511,7 +4511,7 @@ packages:
       jest-message-util: 30.2.0
       jest-util: 30.2.0
       pretty-format: 30.2.0
-      semver: 7.7.3
+      semver: 7.7.4
       synckit: 0.11.12
     transitivePeerDependencies:
       - supports-color
@@ -4843,7 +4843,7 @@ packages:
     resolution: {integrity: sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw==}
     engines: {node: '>=10'}
     dependencies:
-      semver: 7.7.3
+      semver: 7.7.4
     dev: true
 
   /make-error@1.3.6:
@@ -5448,8 +5448,8 @@ packages:
     hasBin: true
     dev: true
 
-  /semver@7.7.3:
-    resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
+  /semver@7.7.4:
+    resolution: {integrity: sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==}
     engines: {node: '>=10'}
     hasBin: true
     dev: true
@@ -5930,7 +5930,7 @@ packages:
       json5: 2.2.3
       lodash.memoize: 4.1.2
       make-error: 1.3.6
-      semver: 7.7.3
+      semver: 7.7.4
       type-fest: 4.41.0
       typescript: 5.9.3
       yargs-parser: 21.1.1
@@ -5946,7 +5946,7 @@ packages:
       chalk: 4.1.2
       enhanced-resolve: 5.19.0
       micromatch: 4.0.8
-      semver: 7.7.3
+      semver: 7.7.4
       source-map: 0.7.6
       typescript: 5.9.3
       webpack: 5.105.0

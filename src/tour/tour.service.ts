@@ -29,39 +29,29 @@ export class TourService {
     private readonly tourSyncIntroService: TourSyncIntroService,
   ) {}
 
-  /**
-   * 매주 월요일 자정에 실행되는 정기 데이터 동기화 작업
-   */
   @Cron(CronExpression.EVERY_WEEK)
   async handleWeeklySync() {
-    await this.syncAllTourData();
+    await this.syncAllLandmarkData();
   }
 
-  /**
-   * 모든 단계의 관광 데이터를 순차적으로 동기화하는 메인 프로세스
-   * (목록 조회 -> 상세 정보 -> 이미지 -> 소개 정보)
-   */
-  async syncAllTourData() {
+  async syncAllLandmarkData() {
     this.logger.log('Starting full tour data synchronization...');
     try {
-      const result = await this.tourSyncListService.sync();
+      const result = await this.syncLandmarkList();
       this.logger.log(`Phase 1: List synchronization completed. Processed ${result.count} items.`);
 
       this.logger.log('Phase 2: Starting detailed tour data synchronization...');
-      // 상세 정보 동기화 시, 업데이트 된(또는 새로 추가된) contentId 목록을 반환받음
-      const changedContentIds = (await this.tourSyncDetailService.sync()) ?? [];
+      const changedContentIds = (await this.syncLandmarkDetails()) ?? [];
       this.logger.log(
         `Phase 2: Detailed synchronization completed. (Updated ${changedContentIds.length} items)`,
       );
 
       this.logger.log('Phase 3: Starting landmark images synchronization...');
-      // 변경된 항목들은 강제로 이미지도 다시 동기화
-      await this.tourSyncImageService.sync(changedContentIds);
+      await this.syncLandmarkImages(changedContentIds);
       this.logger.log('Phase 3: Images synchronization completed.');
 
       this.logger.log('Phase 4: Starting landmark intro synchronization...');
-      // 변경된 항목들은 강제로 소개 정보도 다시 동기화
-      await this.tourSyncIntroService.sync(changedContentIds);
+      await this.syncLandmarkIntros(changedContentIds);
       this.logger.log('Phase 4: Intro synchronization completed.');
 
       return { success: true, message: 'Full synchronization completed', count: result.count };
@@ -72,37 +62,22 @@ export class TourService {
     }
   }
 
-  /**
-   * 한국관광공사 API에서 기본 관광지 목록을 가져와 DB에 저장
-   */
-  async syncTourData() {
-    return this.tourSyncListService.sync();
+  async syncLandmarkList() {
+    return this.tourSyncListService.syncLandmarkList();
   }
 
-  /**
-   * 각 관광지의 상세 정보(개요, 홈페이지 등)를 동기화
-   */
   async syncLandmarkDetails() {
-    return this.tourSyncDetailService.sync();
+    return this.tourSyncDetailService.syncLandmarkDetails();
   }
 
-  /**
-   * 각 관광지의 추가 이미지들을 동기화
-   */
-  async syncLandmarkImages() {
-    return this.tourSyncImageService.sync();
+  async syncLandmarkImages(forceUpdateIds?: number[]) {
+    return this.tourSyncImageService.syncLandmarkImages(forceUpdateIds);
   }
 
-  /**
-   * 각 관광지의 소개 정보(영업시간, 휴무일 등)를 동기화
-   */
-  async syncLandmarkIntros() {
-    return this.tourSyncIntroService.sync();
+  async syncLandmarkIntros(forceUpdateIds?: number[]) {
+    return this.tourSyncIntroService.syncLandmarkIntros(forceUpdateIds);
   }
 
-  /**
-   * DB에 저장된 모든 관광지 목록 조회
-   */
   async getLandmarks() {
     const supabase = this.supabaseService.getClient();
 

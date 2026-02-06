@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 
+import { getErrorMessage, logErrorWithContext } from '../utils/error.util';
 import { LandmarkDetailEntity, LandmarkEntity } from './interfaces/landmark.interface';
 import { LandmarkImageEntity } from './interfaces/landmark-image.interface';
 import { LandmarkIntroEntity } from './interfaces/landmark-intro.interface';
@@ -20,50 +21,105 @@ import { LandmarkMapper } from './utils/landmark.mapper';
 @Injectable()
 export class TourApiService {
   private readonly logger = new Logger(TourApiService.name);
+  private readonly DEFAULT_NUM_OF_ROWS = 800;
+  private readonly PAGE_DELAY = 200;
 
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
 
-  /**
-   * 한국관광공사 API에서 기본 관광지 목록을 가져와 Entity로 변환하여 반환
-   */
-  async fetchTourItems(pageNo = 1, numOfRows = 800): Promise<LandmarkEntity[]> {
-    const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
-    const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
-    const url = `${baseUrl}/areaBasedList2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&contentTypeId=12&areaCode=1&numOfRows=${numOfRows}&pageNo=${pageNo}&_type=json`;
+  async fetchLandmarkList(numOfRows = this.DEFAULT_NUM_OF_ROWS): Promise<LandmarkEntity[]> {
+    const allItems: LandmarkEntity[] = [];
+    let pageNo = 1;
 
     try {
-      this.logger.log(`Fetching tour list (Page: ${pageNo})...`);
-      const response = await firstValueFrom(this.httpService.get<TourApiResponse>(url));
-      const { data } = response;
+      const { items, totalCount } = await this.fetchLandmarkListPage(pageNo, numOfRows);
+      allItems.push(...items);
 
-      const items = data?.response?.body?.items?.item;
-
-      if (!items || !Array.isArray(items)) {
-        this.logger.warn('No items found or invalid data structure');
-        return [];
+      if (totalCount <= numOfRows) {
+        return allItems;
       }
 
-      return items.map((item: TourApiItem) => LandmarkMapper.toLandmarkEntity(item));
+      const totalPages = Math.ceil(totalCount / numOfRows);
+      this.logger.log(`Total items: ${totalCount}, Total pages: ${totalPages}`);
+
+      for (pageNo = 2; pageNo <= totalPages; pageNo++) {
+        await new Promise((resolve) => setTimeout(resolve, this.PAGE_DELAY));
+        const { items: pageItems } = await this.fetchLandmarkListPage(pageNo, numOfRows);
+        allItems.push(...pageItems);
+      }
+
+      return allItems;
     } catch (e) {
-      this.logger.error(`Failed to fetch tour items: ${String(e)}`);
-      throw e;
+      logErrorWithContext(this.logger, 'Failed to fetch all tour items', e);
+      throw new Error(getErrorMessage(e));
     }
   }
 
-  /**
-   * 단일 관광지의 상세 정보 API 호출 및 변환
-   */
+  private async fetchLandmarkListPage(
+    pageNo: number,
+    numOfRows: number,
+  ): Promise<{ items: LandmarkEntity[]; totalCount: number }> {
+    const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
+    const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
+    const url = `${baseUrl}/areaBasedList2`;
+
+    try {
+      this.logger.log(`Fetching tour list (Page: ${pageNo})...`);
+      const response = await firstValueFrom(
+        this.httpService.get<TourApiResponse>(url, {
+          params: {
+            serviceKey,
+            MobileApp: 'AppTest',
+            MobileOS: 'ETC',
+            contentTypeId: 12,
+            areaCode: 1,
+            numOfRows,
+            pageNo,
+            _type: 'json',
+          },
+        }),
+      );
+      const { data } = response;
+      const body = data?.response?.body;
+
+      const rawItems = body?.items?.item;
+      const totalCount = body?.totalCount || 0;
+
+      if (!rawItems) {
+        this.logger.warn(`No items found on page ${pageNo}`);
+        return { items: [], totalCount };
+      }
+
+      const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+      const entities = items.map((item: TourApiItem) => LandmarkMapper.toLandmarkEntity(item));
+
+      return { items: entities, totalCount };
+    } catch (e) {
+      logErrorWithContext(this.logger, `Failed to fetch tour page ${pageNo}`, e);
+      throw new Error(getErrorMessage(e));
+    }
+  }
+
   async fetchLandmarkDetail(contentId: number): Promise<LandmarkDetailEntity | null> {
     const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
     const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
-    const url = `${baseUrl}/detailCommon2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&pageNo=1&numOfRows=10&contentId=${contentId}&_type=json`;
+    const url = `${baseUrl}/detailCommon2`;
 
     try {
       const response = await firstValueFrom(
-        this.httpService.get<TourApiNullableResponse<TourApiDetailItem>>(url),
+        this.httpService.get<TourApiNullableResponse<TourApiDetailItem>>(url, {
+          params: {
+            serviceKey,
+            MobileApp: 'AppTest',
+            MobileOS: 'ETC',
+            pageNo: 1,
+            numOfRows: 10,
+            contentId,
+            _type: 'json',
+          },
+        }),
       );
       const responseData = response.data;
 
@@ -76,22 +132,30 @@ export class TourApiService {
 
       return LandmarkMapper.toLandmarkDetailEntity(item);
     } catch (e) {
-      this.logger.error(`Failed to fetch detail for contentid: ${contentId}: ${e}`);
+      logErrorWithContext(this.logger, `Failed to fetch detail for contentid: ${contentId}`, e);
       return null;
     }
   }
 
-  /**
-   * 단일 관광지의 이미지 목록 API 호출 및 변환
-   */
   async fetchLandmarkImages(contentId: number): Promise<LandmarkImageEntity[]> {
     const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
     const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
-    const url = `${baseUrl}/detailImage2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&pageNo=1&numOfRows=50&contentId=${contentId}&imageYN=Y&_type=json`;
+    const url = `${baseUrl}/detailImage2`;
 
     try {
       const response = await firstValueFrom(
-        this.httpService.get<TourApiNullableResponse<TourApiImageItem>>(url),
+        this.httpService.get<TourApiNullableResponse<TourApiImageItem>>(url, {
+          params: {
+            serviceKey,
+            MobileApp: 'AppTest',
+            MobileOS: 'ETC',
+            pageNo: 1,
+            numOfRows: 50,
+            contentId,
+            imageYN: 'Y',
+            _type: 'json',
+          },
+        }),
       );
       const responseData = response.data;
 
@@ -102,22 +166,30 @@ export class TourApiService {
 
       return items.map((item) => LandmarkMapper.toLandmarkImageEntity(item));
     } catch (e) {
-      this.logger.error(`Failed to fetch images for contentid: ${contentId}: ${e}`);
+      logErrorWithContext(this.logger, `Failed to fetch images for contentid: ${contentId}`, e);
       return [];
     }
   }
 
-  /**
-   * 단일 관광지의 소개 정보 API 호출 및 변환
-   */
   async fetchLandmarkIntro(contentId: number): Promise<LandmarkIntroEntity | null> {
     const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
     const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
-    const url = `${baseUrl}/detailIntro2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&pageNo=1&numOfRows=10&_type=json&contentTypeId=12&contentId=${contentId}`;
+    const url = `${baseUrl}/detailIntro2`;
 
     try {
       const response = await firstValueFrom(
-        this.httpService.get<TourApiNullableResponse<TourApiIntroItem>>(url),
+        this.httpService.get<TourApiNullableResponse<TourApiIntroItem>>(url, {
+          params: {
+            serviceKey,
+            MobileApp: 'AppTest',
+            MobileOS: 'ETC',
+            pageNo: 1,
+            numOfRows: 10,
+            _type: 'json',
+            contentTypeId: 12,
+            contentId,
+          },
+        }),
       );
       const responseData = response.data;
 
@@ -131,19 +203,28 @@ export class TourApiService {
 
       return LandmarkMapper.toLandmarkIntroEntity(item);
     } catch (e) {
-      this.logger.error(`Failed to fetch intro for contentid: ${contentId}: ${e}`);
+      logErrorWithContext(this.logger, `Failed to fetch intro for contentid: ${contentId}`, e);
       return null;
     }
   }
-
   async fetchSigunguCodes(areaCode: number): Promise<TourApiAreaCodeItem[]> {
     const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
     const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
-    const url = `${baseUrl}/areaCode2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&pageNo=1&numOfRows=100&_type=json&areaCode=${areaCode}`;
+    const url = `${baseUrl}/areaCode2`;
 
     try {
       const response = await firstValueFrom(
-        this.httpService.get<TourApiNullableResponse<TourApiAreaCodeItem>>(url),
+        this.httpService.get<TourApiNullableResponse<TourApiAreaCodeItem>>(url, {
+          params: {
+            serviceKey,
+            MobileApp: 'AppTest',
+            MobileOS: 'ETC',
+            pageNo: 1,
+            numOfRows: 100,
+            _type: 'json',
+            areaCode,
+          },
+        }),
       );
       const responseData = response.data;
 
@@ -156,8 +237,12 @@ export class TourApiService {
 
       return items.filter((item) => item?.code && item?.name);
     } catch (e) {
-      this.logger.error(`Failed to fetch sigungu codes for areaCode ${areaCode}: ${String(e)}`);
-      throw e;
+      logErrorWithContext(
+        this.logger,
+        `Failed to fetch sigungu codes for areaCode: ${areaCode}`,
+        e,
+      );
+      throw new Error(getErrorMessage(e));
     }
   }
 }

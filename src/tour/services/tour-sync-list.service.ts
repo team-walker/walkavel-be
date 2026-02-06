@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { SupabaseService } from '../../supabase/supabase.service';
+import { getErrorMessage, logErrorWithContext } from '../../utils/error.util';
 import { SyncTourDataResponseDto } from '../dto/sync-tour-data.dto';
 import { LandmarkEntity } from '../interfaces/landmark.interface';
 import { TourApiService } from '../tour-api.service';
@@ -14,14 +15,11 @@ export class TourSyncListService {
     private readonly supabaseService: SupabaseService,
   ) {}
 
-  /**
-   * Phase 1: 기본 관광지 목록 동기화
-   */
-  async sync(): Promise<SyncTourDataResponseDto> {
+  async syncLandmarkList(): Promise<SyncTourDataResponseDto> {
     try {
       this.logger.log('Fetching tour data from external API...');
 
-      const records: LandmarkEntity[] = await this.tourApiService.fetchTourItems();
+      const records: LandmarkEntity[] = await this.tourApiService.fetchLandmarkList();
 
       if (!records || records.length === 0) {
         this.logger.error('No items found or invalid structure');
@@ -32,30 +30,29 @@ export class TourSyncListService {
 
       const supabase = this.supabaseService.getClient();
 
-      // 1. DB에 저장된 현재 데이터의 modifiedtime 가져오기
       const { data: existingData, error: fetchError } = await supabase
         .from('landmark')
         .select('contentid, modifiedtime');
 
       if (fetchError) {
-        this.logger.error(`Error fetching existing landmarks: ${fetchError.message}`);
-        // 에러 발생 시 안전하게 전체 upsert 진행하거나 에러 처리
+        logErrorWithContext(this.logger, 'Error fetching existing landmarks', fetchError);
       }
 
       const existingMap = new Map(
         existingData?.map((item) => [item.contentid, item.modifiedtime]) || [],
       );
 
-      // 2. 변경된 데이터 또는 신규 데이터만 필터링
       const toUpdate = records.filter((record) => {
         const existingModifiedTime = existingMap.get(record.contentid);
 
-        // 신규 데이터인 경우
         if (!existingModifiedTime) return true;
 
-        // API의 modifiedtime이 DB의 것보다 최신인 경우
-        // (API 데이터 형식에 따라 문자열 비교 또는 Date 변환 비교)
-        return !!record.modifiedtime && record.modifiedtime > existingModifiedTime;
+        if (!record.modifiedtime) return false;
+
+        const recordTime = new Date(record.modifiedtime).getTime();
+        const existingTime = new Date(existingModifiedTime).getTime();
+
+        return recordTime > existingTime;
       });
 
       if (toUpdate.length === 0) {
@@ -72,20 +69,16 @@ export class TourSyncListService {
         .upsert(toUpdate, { onConflict: 'contentid' });
 
       if (error) {
-        this.logger.error(`Supabase error: ${error.message}`);
-        throw new Error(error.message);
+        logErrorWithContext(this.logger, 'Supabase error during upsert', error);
+        throw new Error(getErrorMessage(error));
       }
 
       this.logger.log(`Data successfully synced! (${toUpdate.length} items updated)`);
 
       return { success: true, count: toUpdate.length };
     } catch (error) {
-      if (error instanceof Error) {
-        this.logger.error(`Error syncing tour data: ${error.message}`);
-      } else {
-        this.logger.error(`Error syncing tour data: ${String(error)}`);
-      }
-      throw error;
+      logErrorWithContext(this.logger, 'Error syncing tour data', error);
+      throw new Error(getErrorMessage(error));
     }
   }
 }

@@ -1,88 +1,86 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { SupabaseService } from '../../supabase/supabase.service';
+import { getErrorMessage, logErrorWithContext } from '../../utils/error.util';
 import { LandmarkIntroEntity } from '../interfaces/landmark-intro.interface';
 import { TourApiService } from '../tour-api.service';
 
 @Injectable()
 export class TourSyncIntroService {
   private readonly logger = new Logger(TourSyncIntroService.name);
+  private readonly BATCH_SIZE = 50;
+  private readonly API_DELAY = 200;
 
   constructor(
     private readonly tourApiService: TourApiService,
     private readonly supabaseService: SupabaseService,
   ) {}
 
-  /**
-   * Phase 4: 관광지 소개 정보 동기화
-   * @param forceUpdateIds 강제로 업데이트할 contentid 목록 (변경된 정보 등)
-   */
-  async sync(forceUpdateIds: number[] = []) {
-    const supabase = this.supabaseService.getClient();
+  async syncLandmarkIntros(forceUpdateIds?: number[]) {
+    if (Array.isArray(forceUpdateIds)) {
+      if (forceUpdateIds.length === 0) {
+        this.logger.log('No specific items to sync intros for. Skipping.');
+        return;
+      }
 
-    // 1. 이미 소개 정보가 있는 contentid 목록 조회
-    const { data: existingIntros } = await supabase.from('landmark_intro').select('contentid');
-    const existingIds = new Set(existingIntros?.map((i) => i.contentid) || []);
-
-    // 2. 전체 관광지 contentid 조회
-    const { data: landmarks, error } = await supabase.from('landmark').select('contentid');
-
-    if (error || !landmarks) {
-      this.logger.error(`Error fetching landmarks for intro sync: ${error?.message}`);
+      this.logger.log(
+        `Syncing intros for ${forceUpdateIds.length} provided items (Forced update)...`,
+      );
+      await this.processBatch(forceUpdateIds, true);
       return;
     }
 
-    // 3. 동기화 대상 선정: (소개 정보가 없는 것) OR (강제 업데이트 대상)
-    const forceUpdateSet = new Set(forceUpdateIds);
-    const toSync = landmarks.filter(
-      (l) => !existingIds.has(l.contentid) || forceUpdateSet.has(l.contentid),
-    );
+    const supabase = this.supabaseService.getClient();
 
-    const missingCount = toSync.filter((l) => !existingIds.has(l.contentid)).length;
-    const forceCount = toSync.filter(
-      (l) => forceUpdateSet.has(l.contentid) && existingIds.has(l.contentid),
-    ).length;
+    const { data: existingIntros } = await supabase.from('landmark_intro').select('contentid');
+    const existingIds = new Set(existingIntros?.map((i) => i.contentid) || []);
+
+    const { data: landmarks, error } = await supabase.from('landmark').select('contentid');
+
+    if (error || !landmarks) {
+      logErrorWithContext(this.logger, 'Error fetching landmarks for intro sync', error);
+      throw new Error(getErrorMessage(error));
+    }
+
+    const toSync = landmarks.filter((l) => !existingIds.has(l.contentid)).map((l) => l.contentid);
 
     this.logger.log(`Found ${landmarks.length} total landmarks.`);
-    this.logger.log(
-      `Sync targets: ${toSync.length} (Missing: ${missingCount}, Forced by update: ${forceCount})`,
-    );
+    this.logger.log(`Sync targets: ${toSync.length} (Missing intros)`);
 
     if (toSync.length === 0) {
       this.logger.log('All landmark intros are already up to date.');
       return;
     }
 
-    // 4. 필터링된 대상만 순차적 프로세스 진행
-    const BATCH_SIZE = 50;
+    await this.processBatch(toSync, false);
+  }
+
+  private async processBatch(ids: number[], isForced: boolean) {
     let currentBatch: LandmarkIntroEntity[] = [];
     let processedCount = 0;
-    let landmarkIndex = 0;
 
-    for (const landmark of toSync) {
-      landmarkIndex++;
-      const isForced = forceUpdateSet.has(landmark.contentid);
+    for (const [index, contentid] of ids.entries()) {
       this.logger.log(
-        `[${landmarkIndex}/${toSync.length}] Fetching intro for contentid: ${
-          landmark.contentid
+        `[${index + 1}/${ids.length}] Fetching intro for contentid: ${
+          contentid
         }${isForced ? ' (Forced Update)' : ''}`,
       );
 
-      const intro = await this.tourApiService.fetchLandmarkIntro(landmark.contentid);
+      const intro = await this.tourApiService.fetchLandmarkIntro(contentid);
 
       if (intro) {
         currentBatch.push(intro);
       } else {
-        this.logger.log(`No intro found for contentid: ${landmark.contentid}`);
+        this.logger.log(`No intro found for contentid: ${contentid}`);
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, this.API_DELAY));
 
-      if (currentBatch.length >= BATCH_SIZE) {
+      if (currentBatch.length >= this.BATCH_SIZE) {
         this.logger.log(`Upserting batch of ${currentBatch.length} intros...`);
         await this.upsertBatch(currentBatch);
         processedCount += currentBatch.length;
-        this.logger.log(`Synced intros progress: ${processedCount}/${toSync.length}`);
+        this.logger.log(`Synced intros progress: ${processedCount}/${ids.length}`);
         currentBatch = [];
       }
     }
@@ -102,7 +100,8 @@ export class TourSyncIntroService {
       .upsert(batch, { onConflict: 'contentid' });
 
     if (upsertError) {
-      this.logger.error(`Error upserting intros: ${upsertError.message}`);
+      logErrorWithContext(this.logger, 'Error upserting intros', upsertError);
+      throw new Error(getErrorMessage(upsertError));
     }
   }
 }

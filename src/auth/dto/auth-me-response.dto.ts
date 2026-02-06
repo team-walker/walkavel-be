@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-// 1. 필요한 필드만 담은 클래스 정의
 class UserResponseDto {
   @ApiProperty({ example: 'uuid-1234', description: '사용자 UUID' })
   id: string;
@@ -17,7 +16,7 @@ export class AuthMeResponseDto {
   message: string;
 
   @ApiProperty({
-    type: UserResponseDto, // 2. any 대신 정의한 클래스 사용
+    type: UserResponseDto,
     description: 'Supabase 유저 정보',
   })
   user: UserResponseDto;

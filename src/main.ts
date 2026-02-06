@@ -8,7 +8,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
 
-  // ✅ 전역 파이프 설정 (DTO 검증용)
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -25,11 +24,11 @@ async function bootstrap() {
     .setTitle('API Documentation')
     .setDescription('API description')
     .setVersion('1.0.0')
-    .addBearerAuth() // Bearer 인증 활성화
+    .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document, {
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, documentFactory, {
     jsonDocumentUrl: 'docs/json',
   });
 

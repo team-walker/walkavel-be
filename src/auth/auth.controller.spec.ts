@@ -11,7 +11,6 @@ describe('AuthController', () => {
       controllers: [AuthController],
       providers: [
         {
-          // 실제 AuthService 대신 가짜를 사용함
           provide: AuthService,
           useValue: {},
         },

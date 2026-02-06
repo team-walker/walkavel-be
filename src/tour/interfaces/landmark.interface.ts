@@ -1,22 +1,22 @@
 export interface LandmarkEntity {
   contentid: number;
-  contenttypeid: number;
+  contenttypeid: number | null;
   title: string;
-  addr1: string;
-  addr2: string;
-  zipcode: string;
-  tel: string;
-  areacode: number;
-  sigungucode: number;
-  cat1: string;
-  cat2: string;
-  cat3: string;
-  mapx: number;
-  mapy: number;
-  mlevel: number;
-  firstimage: string;
-  firstimage2: string;
-  cpyrhtdivcd: string;
+  addr1: string | null;
+  addr2: string | null;
+  zipcode: string | null;
+  tel: string | null;
+  areacode: number | null;
+  sigungucode: number | null;
+  cat1: string | null;
+  cat2: string | null;
+  cat3: string | null;
+  mapx: number | null;
+  mapy: number | null;
+  mlevel: number | null;
+  firstimage: string | null;
+  firstimage2: string | null;
+  cpyrhtdivcd: string | null;
   createdtime: string | null;
   modifiedtime: string | null;
   ldongregncd: number | null;
@@ -24,4 +24,9 @@ export interface LandmarkEntity {
   lclssystm1: string | null;
   lclssystm2: string | null;
   lclssystm3: string | null;
+}
+
+export interface LandmarkDetailEntity extends LandmarkEntity {
+  homepage: string | null;
+  overview: string | null;
 }

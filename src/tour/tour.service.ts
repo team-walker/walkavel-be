@@ -1,122 +1,83 @@
-import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { firstValueFrom } from 'rxjs';
 
-import { Database } from '../database.types';
 import { SupabaseService } from '../supabase/supabase.service';
-import { SyncTourDataResponseDto } from './dto/sync-tour-data.dto';
-import { LandmarkEntity } from './interfaces/landmark.interface';
-import { TourApiItem, TourApiResponse } from './interfaces/tour-api-response.interface';
+import { getErrorMessage, logErrorWithContext } from '../utils/error.util';
+import { TourSyncDetailService } from './services/tour-sync-detail.service';
+import { TourSyncImageService } from './services/tour-sync-image.service';
+import { TourSyncIntroService } from './services/tour-sync-intro.service';
+import { TourSyncListService } from './services/tour-sync-list.service';
 
 @Injectable()
 export class TourService {
   private readonly logger = new Logger(TourService.name);
 
   constructor(
-    private readonly httpService: HttpService,
     private readonly supabaseService: SupabaseService,
-    private readonly configService: ConfigService,
+    private readonly tourSyncListService: TourSyncListService,
+    private readonly tourSyncDetailService: TourSyncDetailService,
+    private readonly tourSyncImageService: TourSyncImageService,
+    private readonly tourSyncIntroService: TourSyncIntroService,
   ) {}
 
-  // 매주 월요일 자정에 실행 (Week start set to Monday for automatic sync)
   @Cron(CronExpression.EVERY_WEEK)
   async handleWeeklySync() {
-    this.logger.log('Starting weekly tour data synchronization...');
+    await this.syncAllLandmarkData();
+  }
+
+  async syncAllLandmarkData() {
+    this.logger.log('Starting full tour data synchronization...');
     try {
-      const result = await this.syncTourData();
-      this.logger.log(`Weekly synchronization completed. Processed ${result.count} items.`);
+      const result = await this.tourSyncListService.syncLandmarkList();
+      this.logger.log(`Phase 1: List synchronization completed. Processed ${result.count} items.`);
+
+      this.logger.log('Phase 2: Starting detailed tour data synchronization...');
+      const changedContentIds = await this.tourSyncDetailService.syncLandmarkDetails();
+      this.logger.log(
+        `Phase 2: Detailed synchronization completed. (Updated ${changedContentIds.length} items)`,
+      );
+
+      this.logger.log('Phase 3: Starting landmark images synchronization...');
+      await this.tourSyncImageService.syncLandmarkImages(changedContentIds);
+      this.logger.log('Phase 3: Images synchronization completed.');
+
+      this.logger.log('Phase 4: Starting landmark intro synchronization...');
+      await this.tourSyncIntroService.syncLandmarkIntros(changedContentIds);
+      this.logger.log('Phase 4: Intro synchronization completed.');
+
+      return { success: true, message: 'Full synchronization completed', count: result.count };
     } catch (error) {
-      if (error instanceof Error) {
-        this.logger.error(`Weekly synchronization failed: ${error.message}`);
-      } else {
-        this.logger.error(`Weekly synchronization failed: ${String(error)}`);
-      }
+      logErrorWithContext(this.logger, 'Full synchronization failed', error);
+      throw new Error(`Synchronization failed: ${getErrorMessage(error)}`);
     }
   }
 
-  async syncTourData(): Promise<SyncTourDataResponseDto> {
-    const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
-    const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
-    const url = `${baseUrl}?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&contentTypeId=12&areaCode=1&numOfRows=800&pageNo=1&_type=json`;
+  async syncLandmarkList() {
+    return this.tourSyncListService.syncLandmarkList();
+  }
 
-    try {
-      this.logger.log('Fetching tour data from external API...');
-      const response = await firstValueFrom(this.httpService.get<TourApiResponse>(url));
-      const { data } = response;
+  async syncLandmarkDetails() {
+    return this.tourSyncDetailService.syncLandmarkDetails();
+  }
 
-      const items = data?.response?.body?.items?.item;
+  async syncLandmarkImages() {
+    return this.tourSyncImageService.syncLandmarkImages();
+  }
 
-      if (!items || !Array.isArray(items)) {
-        this.logger.error('Invalid data structure received');
-        return { success: false, message: 'No items found' };
-      }
+  async syncLandmarkIntros() {
+    return this.tourSyncIntroService.syncLandmarkIntros();
+  }
 
-      this.logger.log(`Fetched ${items.length} items. Inserting into Supabase...`);
+  async getLandmarks() {
+    const supabase = this.supabaseService.getClient();
 
-      const supabase = this.supabaseService.getClient() as unknown as SupabaseClient<Database>;
+    const { data, error } = await supabase.from('landmark').select('*');
 
-      // Transform items to match your Supabase table schema
-      const records: LandmarkEntity[] = items.map((item: TourApiItem) => {
-        // Helper to formatting timestamp YYYYMMDDHHMMSS -> YYYY-MM-DD HH:MM:SS
-        const parseDate = (str: string) => {
-          if (!str || str.length !== 14) return null;
-          return `${str.slice(0, 4)}-${str.slice(4, 6)}-${str.slice(6, 8)} ${str.slice(8, 10)}:${str.slice(10, 12)}:${str.slice(12, 14)}`;
-        };
-
-        return {
-          contentid: parseInt(item.contentid, 10),
-          contenttypeid: parseInt(item.contenttypeid, 10),
-          title: item.title,
-          addr1: item.addr1,
-          addr2: item.addr2,
-          zipcode: item.zipcode,
-          tel: item.tel,
-          areacode: parseInt(item.areacode, 10),
-          sigungucode: parseInt(item.sigungucode, 10),
-          cat1: item.cat1,
-          cat2: item.cat2,
-          cat3: item.cat3,
-          mapx: parseFloat(item.mapx),
-          mapy: parseFloat(item.mapy),
-          mlevel: parseInt(item.mlevel, 10),
-          firstimage: item.firstimage,
-          firstimage2: item.firstimage2,
-          cpyrhtdivcd: item.cpyrhtDivCd,
-          createdtime: parseDate(item.createdtime),
-          modifiedtime: parseDate(item.modifiedtime),
-          ldongregncd: item.lDongRegnCd ? parseInt(item.lDongRegnCd, 10) : null,
-          ldongsigngucd: item.lDongSignguCd ? parseInt(item.lDongSignguCd, 10) : null,
-          lclssystm1: item.lclsSystm1 ?? null,
-          lclssystm2: item.lclsSystm2 ?? null,
-          lclssystm3: item.lclsSystm3 ?? null,
-        };
-      });
-
-      // Upsert data to avoid duplicates (assuming contentid is unique content)
-
-      const { error } = await supabase
-        .from('landmark')
-        .upsert(records, { onConflict: 'contentid' });
-
-      if (error) {
-        this.logger.error(`Supabase error: ${error.message}`);
-
-        throw new Error(error.message);
-      }
-
-      this.logger.log('Data successfully synced!');
-
-      return { success: true, count: records.length };
-    } catch (error) {
-      if (error instanceof Error) {
-        this.logger.error(`Error syncing tour data: ${error.message}`);
-      } else {
-        this.logger.error(`Error syncing tour data: ${String(error)}`);
-      }
-      throw error;
+    if (error) {
+      this.logger.error(`Error fetching landmarks: ${error.message}`);
+      throw new Error(error.message);
     }
+
+    return data;
   }
 }

@@ -2,13 +2,17 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
 import { SupabaseService } from '../supabase/supabase.service';
+import { BookmarkWithLandmark } from './interfaces/bookmark.interface';
 
 @Injectable()
 export class BookmarkService {
+  private readonly logger = new Logger(BookmarkService.name);
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   private get client() {
@@ -16,24 +20,15 @@ export class BookmarkService {
   }
 
   async addBookmark(userId: string, contentId: number) {
-    // Check for duplicate
-    const { data: existing } = await this.client
-      .from('bookmark')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('content_id', contentId)
-      .maybeSingle();
-
-    if (existing) {
-      throw new ConflictException('Bookmark already exists');
-    }
-
     const { data, error } = await this.client
       .from('bookmark')
-      .insert({
-        user_id: userId,
-        content_id: contentId,
-      })
+      .upsert(
+        {
+          user_id: userId,
+          content_id: contentId,
+        },
+        { onConflict: 'user_id,content_id', ignoreDuplicates: false },
+      )
       .select()
       .single();
 
@@ -41,26 +36,35 @@ export class BookmarkService {
       if (error.code === '23503') {
         throw new NotFoundException('Landmark content does not exist');
       }
-      throw new InternalServerErrorException(error.message);
+      if (error.code === '23505') {
+        throw new ConflictException('Bookmark already exists');
+      }
+      this.logger.error(`Failed to add bookmark: ${error.message}`);
+      throw new InternalServerErrorException('Failed to add bookmark');
     }
     return data;
   }
 
   async removeBookmark(userId: string, contentId: number) {
-    const { error } = await this.client
+    const { error, count } = await this.client
       .from('bookmark')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('user_id', userId)
       .eq('content_id', contentId);
 
     if (error) {
-      throw new InternalServerErrorException(error.message);
+      this.logger.error(`Failed to remove bookmark: ${error.message}`);
+      throw new InternalServerErrorException('Failed to remove bookmark');
     }
+
+    if (count === 0) {
+      throw new NotFoundException('Bookmark not found');
+    }
+
     return { message: 'Bookmark removed successfully' };
   }
 
-  async getBookmarks(userId: string) {
-    // Relationship is joined on 'landmark' table using the FK on content_id
+  async getBookmarks(userId: string, limit = 20, offset = 0): Promise<BookmarkWithLandmark[]> {
     const { data, error } = await this.client
       .from('bookmark')
       .select(
@@ -80,16 +84,19 @@ export class BookmarkService {
       `,
       )
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
-      throw new InternalServerErrorException(error.message);
+      this.logger.error(`Failed to fetch bookmarks: ${error.message}`);
+      throw new InternalServerErrorException('Failed to fetch bookmarks');
     }
-    return data;
+
+    // In Supabase with TS, joined objects are inferred. We cast for convenience.
+    return (data || []) as unknown as BookmarkWithLandmark[];
   }
 
   async isBookmarked(userId: string, contentId: number): Promise<{ isBookmarked: boolean }> {
-    // Use HEAD request to check for existence efficiently
     const { count, error } = await this.client
       .from('bookmark')
       .select('*', { count: 'exact', head: true })
@@ -97,10 +104,10 @@ export class BookmarkService {
       .eq('content_id', contentId);
 
     if (error) {
-      throw new InternalServerErrorException(error.message);
+      this.logger.error(`Failed to check bookmark status: ${error.message}`);
+      throw new InternalServerErrorException('Failed to check status');
     }
 
-    // count will be non-null if successful
     return { isBookmarked: (count || 0) > 0 };
   }
 }

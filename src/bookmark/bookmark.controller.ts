@@ -6,15 +6,18 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthGuard } from '../auth/auth.guard';
 import type { RequestWithUser } from '../auth/interfaces/request-with-user.interface';
 import { BookmarkService } from './bookmark.service';
+import { BookmarkResponseDto } from './dto/bookmark-response.dto';
 import { CreateBookmarkDto } from './dto/create-bookmark.dto';
+import { GetBookmarksQueryDto } from './dto/get-bookmarks-query.dto';
 
 @ApiTags('Bookmark')
 @ApiBearerAuth()
@@ -25,6 +28,7 @@ export class BookmarkController {
 
   @Post()
   @ApiOperation({ summary: 'Add a bookmark' })
+  @ApiResponse({ type: BookmarkResponseDto, status: 201 })
   async addBookmark(@Req() req: RequestWithUser, @Body() createBookmarkDto: CreateBookmarkDto) {
     return this.bookmarkService.addBookmark(req.user.id, createBookmarkDto.contentId);
   }
@@ -40,12 +44,19 @@ export class BookmarkController {
 
   @Get()
   @ApiOperation({ summary: 'Get all bookmarks for the current user' })
-  async getBookmarks(@Req() req: RequestWithUser) {
-    return this.bookmarkService.getBookmarks(req.user.id);
+  @ApiResponse({ type: BookmarkResponseDto, isArray: true })
+  async getBookmarks(@Req() req: RequestWithUser, @Query() query: GetBookmarksQueryDto) {
+    return this.bookmarkService.getBookmarks(req.user.id, query.limit, query.offset);
   }
 
   @Get(':contentId/status')
   @ApiOperation({ summary: 'Check if a specific content is bookmarked' })
+  @ApiResponse({
+    schema: {
+      type: 'object',
+      properties: { isBookmarked: { type: 'boolean' } },
+    },
+  })
   async checkBookmarkStatus(
     @Req() req: RequestWithUser,
     @Param('contentId', ParseIntPipe) contentId: number,

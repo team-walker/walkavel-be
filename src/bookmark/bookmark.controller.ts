@@ -16,6 +16,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import type { RequestWithUser } from '../auth/interfaces/request-with-user.interface';
 import { BookmarkService } from './bookmark.service';
 import { BookmarkResponseDto } from './dto/bookmark-response.dto';
+import { BookmarkStatusResponseDto } from './dto/bookmark-status-response.dto';
 import { CreateBookmarkDto } from './dto/create-bookmark.dto';
 import { GetBookmarksQueryDto } from './dto/get-bookmarks-query.dto';
 
@@ -51,16 +52,11 @@ export class BookmarkController {
 
   @Get(':contentId/status')
   @ApiOperation({ summary: 'Check if a specific content is bookmarked' })
-  @ApiResponse({
-    schema: {
-      type: 'object',
-      properties: { isBookmarked: { type: 'boolean' } },
-    },
-  })
+  @ApiResponse({ type: BookmarkStatusResponseDto })
   async checkBookmarkStatus(
     @Req() req: RequestWithUser,
     @Param('contentId', ParseIntPipe) contentId: number,
-  ) {
+  ): Promise<BookmarkStatusResponseDto> {
     return this.bookmarkService.isBookmarked(req.user.id, contentId);
   }
 }

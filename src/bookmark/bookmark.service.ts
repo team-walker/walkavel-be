@@ -34,7 +34,12 @@ export class BookmarkService {
 
     if (error) {
       if (error.code === '23503') {
-        throw new NotFoundException('Landmark content does not exist');
+        if (error.message.includes('bookmarks_landmark_fk')) {
+          throw new NotFoundException('Landmark content does not exist');
+        }
+        // Log other FK violations for debugging, but return a generic error to the user.
+        this.logger.error(`Unhandled foreign key violation: ${error.message}`);
+        throw new InternalServerErrorException('Failed to add bookmark due to data inconsistency.');
       }
       if (error.code === '23505') {
         throw new ConflictException('Bookmark already exists');

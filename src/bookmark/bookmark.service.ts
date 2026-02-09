@@ -22,13 +22,10 @@ export class BookmarkService {
   async addBookmark(userId: string, contentId: number) {
     const { data, error } = await this.client
       .from('bookmark')
-      .upsert(
-        {
-          user_id: userId,
-          content_id: contentId,
-        },
-        { onConflict: 'user_id,content_id', ignoreDuplicates: false },
-      )
+      .insert({
+        user_id: userId,
+        content_id: contentId,
+      })
       .select()
       .single();
 
@@ -37,14 +34,15 @@ export class BookmarkService {
         if (error.message.includes('bookmarks_landmark_fk')) {
           throw new NotFoundException('Landmark content does not exist');
         }
-        // Log other FK violations for debugging, but return a generic error to the user.
-        this.logger.error(`Unhandled foreign key violation: ${error.message}`);
-        throw new InternalServerErrorException('Failed to add bookmark due to data inconsistency.');
+        this.logger.error(`Foreign key violation: ${error.message}`);
+        throw new InternalServerErrorException(
+          'Data inconsistency detected while adding bookmark.',
+        );
       }
       if (error.code === '23505') {
         throw new ConflictException('Bookmark already exists');
       }
-      this.logger.error(`Failed to add bookmark: ${error.message}`);
+      this.logger.error(`Unexpected error while adding bookmark: ${error.message}`);
       throw new InternalServerErrorException('Failed to add bookmark');
     }
     return data;
@@ -58,7 +56,7 @@ export class BookmarkService {
       .eq('content_id', contentId);
 
     if (error) {
-      this.logger.error(`Failed to remove bookmark: ${error.message}`);
+      this.logger.error(`Error removing bookmark: ${error.message}`);
       throw new InternalServerErrorException('Failed to remove bookmark');
     }
 

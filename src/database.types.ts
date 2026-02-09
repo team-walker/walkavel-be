@@ -24,14 +24,14 @@ export interface Database {
         };
         Relationships: [
           {
-            foreignKeyName: 'bookmarks_landmark_fk';
+            foreignKeyName: 'bookmark_landmark_fk';
             columns: ['content_id'];
             isOneToOne: false;
             referencedRelation: 'landmark';
             referencedColumns: ['contentid'];
           },
           {
-            foreignKeyName: 'bookmarks_user_fk';
+            foreignKeyName: 'bookmark_user_fk';
             columns: ['user_id'];
             isOneToOne: false;
             referencedRelation: 'users';

@@ -33,6 +33,6 @@ export class BookmarkResponseDto {
   @ApiProperty({ example: '2026-02-07T14:30:00Z' })
   created_at: string;
 
-  @ApiProperty({ type: LandmarkSummaryDto })
-  landmark: LandmarkSummaryDto;
+  @ApiProperty({ type: LandmarkSummaryDto, nullable: true })
+  landmark: LandmarkSummaryDto | null;
 }

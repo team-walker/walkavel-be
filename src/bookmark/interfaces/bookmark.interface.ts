@@ -12,5 +12,5 @@ export interface BookmarkWithLandmark {
   id: number;
   content_id: number;
   created_at: string;
-  landmark: LandmarkSummary;
+  landmark: LandmarkSummary | null;
 }

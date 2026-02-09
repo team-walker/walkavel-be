@@ -31,7 +31,7 @@ export class BookmarkService {
 
     if (error) {
       if (error.code === '23503') {
-        if (error.message.includes('bookmarks_landmark_fk')) {
+        if (error.message.includes('bookmark_landmark_fk')) {
           throw new NotFoundException('Landmark content does not exist');
         }
         this.logger.error(`Foreign key violation: ${error.message}`);
@@ -67,7 +67,11 @@ export class BookmarkService {
     return { message: 'Bookmark removed successfully' };
   }
 
-  async getBookmarks(userId: string, limit = 20, offset = 0): Promise<BookmarkWithLandmark[]> {
+  async getBookmarks(
+    userId: string,
+    limit: number,
+    offset: number,
+  ): Promise<BookmarkWithLandmark[]> {
     const { data, error } = await this.client
       .from('bookmark')
       .select(

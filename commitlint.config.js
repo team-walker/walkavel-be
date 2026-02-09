@@ -4,9 +4,10 @@ module.exports = {
     'subject-case': [0],
     'subject-full-stop': [0, 'never', '.'],
     'body-max-line-length': [0],
-    'header-max-length': [2, 'always', 150],
+    'header-max-length': [2, 'always', 200],
     'body-leading-blank': [0],
     'footer-leading-blank': [0],
+    'footer-max-line-length': [0],
     'type-enum': [
       2,
       'always',

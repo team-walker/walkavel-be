@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS stamps (
   CONSTRAINT fk_stamps_landmark
     FOREIGN KEY (landmark_id)
     REFERENCES public.landmark(contentid)
-    ON DELETE CASCADE,
+    ON DELETE RESTRICT,
 
   CONSTRAINT unique_user_landmark
     UNIQUE (user_id, landmark_id)
@@ -20,3 +20,30 @@ CREATE TABLE IF NOT EXISTS stamps (
 
 CREATE INDEX IF NOT EXISTS idx_stamps_user_id ON stamps(user_id);
 CREATE INDEX IF NOT EXISTS idx_stamps_landmark_id ON stamps(landmark_id);
+
+ALTER TABLE public.stamps ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS stamps_select_own ON public.stamps;
+CREATE POLICY stamps_select_own
+  ON public.stamps
+  FOR SELECT
+  USING (user_id = auth.uid());
+
+DROP POLICY IF EXISTS stamps_insert_own ON public.stamps;
+CREATE POLICY stamps_insert_own
+  ON public.stamps
+  FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS stamps_update_own ON public.stamps;
+CREATE POLICY stamps_update_own
+  ON public.stamps
+  FOR UPDATE
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS stamps_delete_own ON public.stamps;
+CREATE POLICY stamps_delete_own
+  ON public.stamps
+  FOR DELETE
+  USING (user_id = auth.uid());

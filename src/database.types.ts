@@ -349,6 +349,42 @@ export interface Database {
         };
         Relationships: [];
       };
+      stamps: {
+        Row: {
+          id: number;
+          user_id: string;
+          landmark_id: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          user_id: string;
+          landmark_id: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          user_id?: string;
+          landmark_id?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'fk_stamps_landmark';
+            columns: ['landmark_id'];
+            isOneToOne: false;
+            referencedRelation: 'landmark';
+            referencedColumns: ['contentid'];
+          },
+          {
+            foreignKeyName: 'fk_stamps_user';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       users: {
         Row: {
           id: string;

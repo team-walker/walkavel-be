@@ -19,6 +19,7 @@ import { BookmarkResponseDto } from './dto/bookmark-response.dto';
 import { BookmarkStatusResponseDto } from './dto/bookmark-status-response.dto';
 import { CreateBookmarkDto } from './dto/create-bookmark.dto';
 import { GetBookmarksQueryDto } from './dto/get-bookmarks-query.dto';
+import { BookmarkWithLandmark } from './interfaces/bookmark.interface';
 
 @ApiTags('Bookmark')
 @ApiBearerAuth()
@@ -30,7 +31,10 @@ export class BookmarkController {
   @Post()
   @ApiOperation({ summary: 'Add a bookmark' })
   @ApiResponse({ type: BookmarkResponseDto, status: 201 })
-  async addBookmark(@Req() req: RequestWithUser, @Body() createBookmarkDto: CreateBookmarkDto) {
+  async addBookmark(
+    @Req() req: RequestWithUser,
+    @Body() createBookmarkDto: CreateBookmarkDto,
+  ): Promise<BookmarkWithLandmark> {
     return this.bookmarkService.addBookmark(req.user.id, createBookmarkDto.contentId);
   }
 
@@ -39,14 +43,17 @@ export class BookmarkController {
   async removeBookmark(
     @Req() req: RequestWithUser,
     @Param('contentId', ParseIntPipe) contentId: number,
-  ) {
+  ): Promise<{ message: string }> {
     return this.bookmarkService.removeBookmark(req.user.id, contentId);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all bookmarks for the current user' })
   @ApiResponse({ type: BookmarkResponseDto, isArray: true })
-  async getBookmarks(@Req() req: RequestWithUser, @Query() query: GetBookmarksQueryDto) {
+  async getBookmarks(
+    @Req() req: RequestWithUser,
+    @Query() query: GetBookmarksQueryDto,
+  ): Promise<BookmarkWithLandmark[]> {
     return this.bookmarkService.getBookmarks(req.user.id, query.limit, query.offset);
   }
 

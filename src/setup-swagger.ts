@@ -11,7 +11,7 @@ export function setupSwagger(app: INestApplication): void {
 
   const config = new DocumentBuilder()
     .setTitle('API Documentation')
-    .setDescription('Supabase OAuth 테스트를 위한 API 명세서입니다.')
+    .setDescription('Walkavel API 명세서입니다.')
     .setVersion('1.0.0')
     .addBearerAuth()
     .build();

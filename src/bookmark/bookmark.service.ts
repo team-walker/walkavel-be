@@ -19,14 +19,30 @@ export class BookmarkService {
     return this.supabaseService.getClient();
   }
 
-  async addBookmark(userId: string, contentId: number) {
+  async addBookmark(userId: string, contentId: number): Promise<BookmarkWithLandmark> {
     const { data, error } = await this.client
       .from('bookmark')
       .insert({
-        user_id: userId,
-        content_id: contentId,
+        userid: userId,
+        contentid: contentId,
       })
-      .select()
+      .select(
+        `
+        id,
+        userId:userid,
+        contentId:contentid,
+        createdAt:created_at,
+        landmark (
+          contentId:contentid,
+          title,
+          firstImage:firstimage,
+          addr1,
+          cat1,
+          cat2,
+          cat3
+        )
+      `,
+      )
       .single();
 
     if (error) {
@@ -48,12 +64,12 @@ export class BookmarkService {
     return data;
   }
 
-  async removeBookmark(userId: string, contentId: number) {
+  async removeBookmark(userId: string, contentId: number): Promise<{ message: string }> {
     const { error, count } = await this.client
       .from('bookmark')
       .delete({ count: 'exact' })
-      .eq('user_id', userId)
-      .eq('content_id', contentId);
+      .eq('userid', userId)
+      .eq('contentid', contentId);
 
     if (error) {
       this.logger.error(`Error removing bookmark: ${error.message}`);
@@ -77,12 +93,13 @@ export class BookmarkService {
       .select(
         `
         id,
-        content_id,
-        created_at,
+        userId:userid,
+        contentId:contentid,
+        createdAt:created_at,
         landmark (
-          contentid,
+          contentId:contentid,
           title,
-          firstimage,
+          firstImage:firstimage,
           addr1,
           cat1,
           cat2,
@@ -90,7 +107,7 @@ export class BookmarkService {
         )
       `,
       )
-      .eq('user_id', userId)
+      .eq('userid', userId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -99,7 +116,6 @@ export class BookmarkService {
       throw new InternalServerErrorException('Failed to fetch bookmarks');
     }
 
-    // In Supabase with TS, joined objects are inferred. We cast for convenience.
     return (data || []) as unknown as BookmarkWithLandmark[];
   }
 
@@ -107,8 +123,8 @@ export class BookmarkService {
     const { count, error } = await this.client
       .from('bookmark')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('content_id', contentId);
+      .eq('userid', userId)
+      .eq('contentid', contentId);
 
     if (error) {
       this.logger.error(`Failed to check bookmark status: ${error.message}`);

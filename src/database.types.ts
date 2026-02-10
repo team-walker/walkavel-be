@@ -6,33 +6,33 @@ export interface Database {
       bookmark: {
         Row: {
           id: number;
-          user_id: string;
-          content_id: number;
+          userid: string;
+          contentid: number;
           created_at: string | null;
         };
         Insert: {
           id?: number;
-          user_id: string;
-          content_id: number;
+          userid: string;
+          contentid: number;
           created_at?: string | null;
         };
         Update: {
           id?: number;
-          user_id?: string;
-          content_id?: number;
+          userid?: string;
+          contentid?: number;
           created_at?: string | null;
         };
         Relationships: [
           {
             foreignKeyName: 'bookmark_landmark_fk';
-            columns: ['content_id'];
+            columns: ['contentid'];
             isOneToOne: false;
             referencedRelation: 'landmark';
             referencedColumns: ['contentid'];
           },
           {
-            foreignKeyName: 'bookmark_user_fk';
-            columns: ['user_id'];
+            foreignKeyName: 'bookmark_userid_fkey';
+            columns: ['userid'];
             isOneToOne: false;
             referencedRelation: 'users';
             referencedColumns: ['id'];

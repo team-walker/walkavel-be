@@ -1,7 +1,7 @@
 export interface LandmarkSummary {
-  contentid: number;
+  contentId: number;
   title: string;
-  firstimage: string | null;
+  firstImage: string | null;
   addr1: string | null;
   cat1: string | null;
   cat2: string | null;
@@ -10,7 +10,8 @@ export interface LandmarkSummary {
 
 export interface BookmarkWithLandmark {
   id: number;
-  content_id: number;
-  created_at: string;
+  userId: string;
+  contentId: number;
+  createdAt: string | null;
   landmark: LandmarkSummary | null;
 }

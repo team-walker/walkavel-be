@@ -2,13 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 
 class LandmarkSummaryDto {
   @ApiProperty({ example: 126508 })
-  contentid: number;
+  contentId: number;
 
   @ApiProperty({ example: '경복궁' })
   title: string;
 
   @ApiProperty({ example: 'http://...', nullable: true })
-  firstimage: string | null;
+  firstImage: string | null;
 
   @ApiProperty({ example: '서울특별시 종로구...', nullable: true })
   addr1: string | null;
@@ -27,11 +27,14 @@ export class BookmarkResponseDto {
   @ApiProperty({ example: 1 })
   id: number;
 
-  @ApiProperty({ example: 126508 })
-  content_id: number;
+  @ApiProperty({ example: 'uuid-1234' })
+  userId: string;
 
-  @ApiProperty({ example: '2026-02-07T14:30:00Z' })
-  created_at: string;
+  @ApiProperty({ example: 126508 })
+  contentId: number;
+
+  @ApiProperty({ example: '2026-02-07T14:30:00Z', nullable: true })
+  createdAt: string | null;
 
   @ApiProperty({ type: LandmarkSummaryDto, nullable: true })
   landmark: LandmarkSummaryDto | null;

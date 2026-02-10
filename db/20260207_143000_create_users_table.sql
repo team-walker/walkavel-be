@@ -1,15 +1,13 @@
 -- Users table (extends auth.users)
 CREATE TABLE public.users (
-  id uuid NOT NULL,
-  email text,
-  nickname text,
-  avatar_url text,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT users_pkey PRIMARY KEY (id),
-  CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
-);
-
+  id uuid not null,
+  email text null,
+  nickname text null,
+  avatar_url text null,
+  created_at timestamp with time zone null default now(),
+  constraint users_pkey primary key (id),
+  constraint users_id_fkey foreign KEY (id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
 -- Enable Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 

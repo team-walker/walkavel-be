@@ -1,14 +1,13 @@
-create table public.bookmark (
+CREATE TABLE public.bookmark (
   id serial not null,
-  user_id uuid not null,
-  content_id bigint not null,
+  userid uuid not null,
+  contentid bigint not null,
   created_at timestamp with time zone null default now(),
   constraint bookmark_pkey primary key (id),
-  constraint bookmark_user_content_unique unique (user_id, content_id),
-  constraint bookmark_landmark_fk foreign KEY (content_id) references landmark (contentid),
-  constraint bookmark_user_fk foreign KEY (user_id) references auth.users (id)
+  constraint bookmark_user_content_unique unique (userid, contentid),
+  constraint bookmark_contentid_fkey foreign KEY (contentid) references landmark (contentid),
+  constraint bookmark_userid_fkey foreign KEY (userid) references auth.users (id)
 ) TABLESPACE pg_default;
-
 -- Enable Row Level Security
 ALTER TABLE public.bookmark ENABLE ROW LEVEL SECURITY;
 

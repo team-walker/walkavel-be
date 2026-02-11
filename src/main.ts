@@ -15,7 +15,7 @@ async function bootstrap() {
     }),
   );
 
-  const origins = process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:3000'];
+  const origins = process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:3001'];
 
   app.enableCors({
     origin: origins,
@@ -24,7 +24,7 @@ async function bootstrap() {
 
   setupSwagger(app);
 
-  const port = process.env.PORT ?? 3000;
+  const port = process.env.PORT ?? 3001;
   const host = '0.0.0.0';
   await app.listen(port, host);
 

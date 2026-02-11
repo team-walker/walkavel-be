@@ -1,6 +1,7 @@
 lockfileVersion: '6.0'
 
 overrides:
+  rxjs: 7.8.2
   lodash: ^4.17.23
 
 dependencies:
@@ -41,7 +42,7 @@ dependencies:
     specifier: ^0.2.2
     version: 0.2.2
   rxjs:
-    specifier: ^7.8.2
+    specifier: 7.8.2
     version: 7.8.2
 
 devDependencies:
@@ -152,7 +153,7 @@ packages:
       chokidar: 4.0.3
       jsonc-parser: 3.3.1
       picomatch: 4.0.2
-      rxjs: 7.8.1
+      rxjs: 7.8.2
       source-map: 0.7.4
     dev: true
 
@@ -170,7 +171,7 @@ packages:
       chokidar: 4.0.3
       jsonc-parser: 3.3.1
       picomatch: 4.0.2
-      rxjs: 7.8.1
+      rxjs: 7.8.2
       source-map: 0.7.4
     dev: true
 
@@ -198,7 +199,7 @@ packages:
       jsonc-parser: 3.3.1
       magic-string: 0.30.17
       ora: 5.4.1
-      rxjs: 7.8.1
+      rxjs: 7.8.2
     transitivePeerDependencies:
       - chokidar
     dev: true
@@ -211,7 +212,7 @@ packages:
       jsonc-parser: 3.3.1
       magic-string: 0.30.17
       ora: 5.4.1
-      rxjs: 7.8.1
+      rxjs: 7.8.2
     transitivePeerDependencies:
       - chokidar
     dev: true
@@ -5492,12 +5493,6 @@ packages:
   /run-async@4.0.6:
     resolution: {integrity: sha512-IoDlSLTs3Yq593mb3ZoKWKXMNu3UpObxhgA/Xuid5p4bbfi2jdY1Hj0m1K+0/tEuQTxIGMhQDqGjKb7RuxGpAQ==}
     engines: {node: '>=0.12.0'}
-    dev: true
-
-  /rxjs@7.8.1:
-    resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
-    dependencies:
-      tslib: 2.8.1
     dev: true
 
   /rxjs@7.8.2:

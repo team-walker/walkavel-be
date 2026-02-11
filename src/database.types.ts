@@ -3,6 +3,42 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
+      bookmark: {
+        Row: {
+          id: number;
+          userid: string;
+          contentid: number;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: number;
+          userid: string;
+          contentid: number;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: number;
+          userid?: string;
+          contentid?: number;
+          created_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'bookmark_landmark_fk';
+            columns: ['contentid'];
+            isOneToOne: false;
+            referencedRelation: 'landmark';
+            referencedColumns: ['contentid'];
+          },
+          {
+            foreignKeyName: 'bookmark_userid_fkey';
+            columns: ['userid'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       landmark: {
         Row: {
           contentid: number;
@@ -312,6 +348,42 @@ export interface Database {
           sido_name?: string;
         };
         Relationships: [];
+      };
+      stamps: {
+        Row: {
+          id: number;
+          user_id: string;
+          landmark_id: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          user_id: string;
+          landmark_id: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          user_id?: string;
+          landmark_id?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'fk_stamps_landmark';
+            columns: ['landmark_id'];
+            isOneToOne: false;
+            referencedRelation: 'landmark';
+            referencedColumns: ['contentid'];
+          },
+          {
+            foreignKeyName: 'fk_stamps_user';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       users: {
         Row: {

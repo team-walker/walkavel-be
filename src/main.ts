@@ -15,17 +15,20 @@ async function bootstrap() {
     }),
   );
 
+  const origins = process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:3000'];
+
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: origins,
     credentials: true,
   });
 
   setupSwagger(app);
 
-  const port = process.env.PORT ?? 3001;
-  await app.listen(port);
+  const port = process.env.PORT ?? 3000;
+  const host = '0.0.0.0';
+  await app.listen(port, host);
 
-  logger.log(`Server running on http://localhost:${port}`);
+  logger.log(`Server running on http://${host}:${port}`);
 }
 
 void bootstrap();

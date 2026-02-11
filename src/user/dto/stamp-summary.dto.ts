@@ -1,21 +1,23 @@
-export class StampSummaryDto {
-  /** 총 스탬프 개수 */
-  totalCount: number;
+import { ApiProperty } from '@nestjs/swagger';
 
-  /** 획득한 랜드마크 리스트 */
-  landmarks: LandmarkDetail[];
-}
+export class LandmarkDetail {
+  @ApiProperty({ description: '랜드마크 ID' })
+  landmarkId: number;
 
-class LandmarkDetail {
-  /** 랜드마크 ID */
-  landmark_id: number;
-
-  /** 랜드마크 명칭 */
+  @ApiProperty({ description: '랜드마크 명칭' })
   title: string;
 
-  /** 이미지 URL (null 허용) */
+  @ApiProperty({ description: '이미지 URL', nullable: true })
   image: string | null;
 
-  /** 획득 일시 */
-  obtained_at: string;
+  @ApiProperty({ description: '획득 일시' })
+  obtainedAt: string;
+}
+
+export class StampSummaryDto {
+  @ApiProperty({ description: '총 스탬프 개수' })
+  totalCount: number;
+
+  @ApiProperty({ type: [LandmarkDetail], description: '획득한 랜드마크 목록' })
+  landmarks: LandmarkDetail[];
 }

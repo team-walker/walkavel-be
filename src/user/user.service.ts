@@ -4,6 +4,8 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { StampSummaryDto } from './dto/stamp-summary.dto';
 import { StampRow } from './interfaces/stamp-row.interface';
 
+const DEFAULT_LANDMARK_TITLE = '이름 없음';
+
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
@@ -24,19 +26,18 @@ export class UserService {
         { count: 'exact' },
       )
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .returns<StampRow[]>();
+      .order('created_at', { ascending: false });
 
     if (error) {
       this.logger.error(`조회 실패: ${error.message}`);
       throw new InternalServerErrorException('DB 조회 오류');
     }
 
-    const landmarks = (data || []).map((item: StampRow) => ({
-      landmark_id: item.landmark_id,
-      title: item.landmark?.title ?? '이름 없음',
+    const landmarks = ((data as unknown as StampRow[]) || []).map((item: StampRow) => ({
+      landmarkId: item.landmark_id,
+      title: item.landmark?.title ?? DEFAULT_LANDMARK_TITLE, // ✅ 상수 사용
       image: item.landmark?.firstimage ?? null,
-      obtained_at: item.created_at,
+      obtainedAt: item.created_at,
     }));
 
     return { totalCount: count || 0, landmarks };

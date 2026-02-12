@@ -33,13 +33,19 @@ export class UserService {
       throw new InternalServerErrorException('DB 조회 오류');
     }
 
-    const landmarks = ((data as unknown as StampRow[]) || []).map((item: StampRow) => ({
+    const stampData = data as StampRow[] | null;
+    const items = stampData ?? [];
+
+    const landmarks = items.map((item: StampRow) => ({
       landmarkId: item.landmark_id,
-      title: item.landmark?.title ?? DEFAULT_LANDMARK_TITLE, // ✅ 상수 사용
+      title: item.landmark?.title ?? DEFAULT_LANDMARK_TITLE,
       image: item.landmark?.firstimage ?? null,
       obtainedAt: item.created_at,
     }));
 
-    return { totalCount: count || 0, landmarks };
+    return {
+      totalCount: count || 0,
+      landmarks,
+    };
   }
 }

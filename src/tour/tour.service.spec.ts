@@ -111,6 +111,30 @@ describe('TourService', () => {
       expect(result.detail.contentid).toBe(100);
       expect(result.images).toHaveLength(2);
       expect(result.intro?.contentid).toBe(100);
+      expect(result.isStamped).toBe(false);
+    });
+
+    it('returns isStamped=true when user already has stamp', async () => {
+      const supabase = createSupabaseMock({
+        landmark_detail: {
+          maybeSingle: { data: { contentid: 100, title: 'A' }, error: null },
+        },
+        landmark_image: {
+          order: { data: [], error: null },
+        },
+        landmark_intro: {
+          maybeSingle: { data: null, error: null },
+        },
+        stamps: {
+          maybeSingle: { data: { id: 1 }, error: null },
+        },
+      });
+      (supabaseService.getClient as jest.Mock).mockReturnValue(supabase);
+
+      const result = await service.getLandmarkDetail(100, 'user-1');
+
+      expect(result.isStamped).toBe(true);
+      expect(supabase.from).toHaveBeenCalledWith('stamps');
     });
 
     it('throws NotFound when detail missing', async () => {

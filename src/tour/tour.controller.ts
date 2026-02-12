@@ -1,11 +1,14 @@
-import { Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import {
   ApiBadRequestResponse,
   ApiExcludeEndpoint,
   ApiNotFoundResponse,
   ApiResponse,
 } from '@nestjs/swagger';
+import { User } from '@supabase/supabase-js';
 
+import { OptionalAuthGuard } from '../auth/optional-auth.guard';
 import { LandmarkDto } from './dto/landmark.dto';
 import { LandmarkDetailResponseDto } from './dto/landmark-detail-response.dto';
 import { SyncTourDetailResponseDto, SyncTourResponseDto } from './dto/sync-tour-response.dto';
@@ -74,14 +77,17 @@ export class TourController {
   }
 
   @Get('landmarks/:contentId')
+  @UseGuards(OptionalAuthGuard)
+  @ApiBearerAuth()
   @ApiResponse({ type: LandmarkDetailResponseDto })
   @ApiBadRequestResponse({ description: 'contentId must be a positive integer' })
   @ApiNotFoundResponse({ description: 'Landmark not found' })
   async getLandmarkDetail(
     @Param('contentId', new ParseIntPipe({ errorHttpStatusCode: 400 }))
     contentId: number,
+    @Req() req: { user?: User },
   ) {
-    return this.tourService.getLandmarkDetail(contentId);
+    return this.tourService.getLandmarkDetail(contentId, req.user?.id);
   }
 
   @Get()

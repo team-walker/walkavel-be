@@ -165,4 +165,7 @@ export class LandmarkDetailResponseDto {
 
   @ApiPropertyOptional({ type: LandmarkIntroDto, nullable: true })
   intro?: LandmarkIntroDto | null;
+
+  @ApiProperty({ description: 'Whether the current user already acquired this stamp' })
+  isStamped: boolean;
 }

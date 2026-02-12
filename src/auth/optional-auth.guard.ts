@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 
 import { AuthService } from './auth.service';
 import type { RequestWithUser } from './interfaces/request-with-user.interface';
@@ -15,12 +15,14 @@ export class OptionalAuthGuard implements CanActivate {
       return true;
     }
 
-    const [type, token] = authHeader.split(' ');
-    if (type !== 'Bearer' || !token) {
-      throw new UnauthorizedException('Invalid authorization header format');
+    try {
+      const [type, token] = authHeader.split(' ');
+      if (type === 'Bearer' && token) {
+        request.user = await this.authService.verifyToken(token);
+      }
+    } catch {
+      // Optional auth: ignore malformed/expired token and continue as guest.
     }
-
-    request.user = await this.authService.verifyToken(token);
     return true;
   }
 }

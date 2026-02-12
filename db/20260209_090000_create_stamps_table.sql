@@ -33,17 +33,23 @@ DROP POLICY IF EXISTS stamps_delete_own ON public.stamps;
 CREATE POLICY stamps_select_own
   ON public.stamps
   FOR SELECT
-  USING (user_id = auth.uid());
+  USING (
+    ((user_id = auth.uid()) OR (auth.role() = 'service_role'::text))
+  );
 
 CREATE POLICY stamps_insert_own
   ON public.stamps
   FOR INSERT
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (
+    ((user_id = auth.uid()) OR (auth.role() = 'service_role'::text))
+  );
 
 CREATE POLICY stamps_delete_own
   ON public.stamps
   FOR DELETE
-  USING (user_id = auth.uid());
+  USING (
+    ((user_id = auth.uid()) OR (auth.role() = 'service_role'::text))
+  );
 
 -- Allow service_role to bypass RLS policies for the stamps table
 ALTER POLICY "Allow service_role access" ON stamps

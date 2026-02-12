@@ -56,7 +56,10 @@ export class TourService {
     return { success: true, message: 'Full synchronization completed', count: result.count };
   }
 
-  async createStamp(userId: string, landmarkId: number): Promise<void> {
+  async createStamp(
+    userId: string,
+    landmarkId: number,
+  ): Promise<Database['public']['Tables']['stamps']['Row']> {
     const supabase = this.supabaseService.getClient();
 
     // 1. 랜드마크 존재 여부 확인
@@ -75,27 +78,12 @@ export class TourService {
       throw new NotFoundException(`Landmark with ID ${landmarkId} not found`);
     }
 
-    // 2. 이미 스탬프가 있는지 확인
-    const { data: existingStamp, error: checkError } = await supabase
+    // 2. 스탬프 생성 (중복 시 DB 제약조건에 의해 에러 발생)
+    const { data, error: insertError } = await supabase
       .from('stamps')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('landmark_id', landmarkId)
-      .maybeSingle();
-
-    if (checkError) {
-      this.logger.error(`Failed to check existing stamp: ${checkError.message}`);
-      throw new InternalServerErrorException('Database error while checking stamp');
-    }
-
-    if (existingStamp) {
-      throw new BadRequestException('User already has a stamp for this landmark');
-    }
-
-    // 3. 스탬프 생성
-    const { error: insertError } = await supabase
-      .from('stamps')
-      .insert({ user_id: userId, landmark_id: landmarkId });
+      .insert({ user_id: userId, landmark_id: landmarkId })
+      .select()
+      .single();
 
     if (insertError) {
       if (insertError.code === '23505') {
@@ -104,6 +92,8 @@ export class TourService {
       this.logger.error(`Failed to create stamp: ${insertError.message}`);
       throw new InternalServerErrorException('Failed to create stamp');
     }
+
+    return data;
   }
 
   async syncLandmarkList() {

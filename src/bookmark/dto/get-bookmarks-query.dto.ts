@@ -2,12 +2,20 @@ import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class GetBookmarksQueryDto {
+  /** Number of items per page.
+   * @default 20
+   * @example 20
+   */
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(100)
   limit: number = 20;
+  /** Number of items to skip.
+   * @default 0
+   * @example 0
+   */
   @IsOptional()
   @Type(() => Number)
   @IsInt()

@@ -1,23 +1,27 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
 class UserResponseDto {
-  @ApiProperty({ example: 'uuid-1234', description: '사용자 UUID' })
+  /**
+   * 사용자 UUID
+   * @example 'uuid-1234'
+   */
   id: string;
 
-  @ApiPropertyOptional({ example: 'user@example.com', description: '사용자 이메일' })
+  /**
+   * 사용자 이메일
+   * @example 'user@example.com'
+   */
   email?: string;
 
-  @ApiPropertyOptional({ example: '2025-06-13T00:00:00Z', description: '마지막 로그인 시각' })
+  /**
+   * 마지막 로그인 시각
+   * @example '2025-06-13T00:00:00Z'
+   */
   last_sign_in_at?: string;
 }
 
 export class AuthMeResponseDto {
-  @ApiProperty({ example: '인증 성공' })
+  /** @example '인증 성공' */
   message: string;
 
-  @ApiProperty({
-    type: UserResponseDto,
-    description: 'Supabase 유저 정보',
-  })
+  /** Supabase 유저 정보 */
   user: UserResponseDto;
 }

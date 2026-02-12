@@ -44,3 +44,9 @@ CREATE POLICY stamps_delete_own
   ON public.stamps
   FOR DELETE
   USING (user_id = auth.uid());
+
+-- Allow service_role to bypass RLS policies for the stamps table
+ALTER POLICY "Allow service_role access" ON stamps
+    FOR ALL
+    USING (auth.role() = 'service_role')
+    WITH CHECK (auth.role() = 'service_role');

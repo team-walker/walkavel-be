@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { PG_FOREIGN_KEY_VIOLATION, PG_UNIQUE_VIOLATION } from '../common/constants/postgres-errors';
 import { SupabaseService } from '../supabase/supabase.service';
 import { BookmarkWithLandmark } from './interfaces/bookmark.interface';
 
@@ -46,7 +47,7 @@ export class BookmarkService {
       .single();
 
     if (error) {
-      if (error.code === '23503') {
+      if (error.code === PG_FOREIGN_KEY_VIOLATION) {
         if (error.message.includes('bookmark_landmark_fk')) {
           throw new NotFoundException('Landmark content does not exist');
         }
@@ -55,7 +56,7 @@ export class BookmarkService {
           'Data inconsistency detected while adding bookmark.',
         );
       }
-      if (error.code === '23505') {
+      if (error.code === PG_UNIQUE_VIOLATION) {
         throw new ConflictException('Bookmark already exists');
       }
       this.logger.error(`Unexpected error while adding bookmark: ${error.message}`);

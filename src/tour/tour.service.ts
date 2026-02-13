@@ -8,6 +8,7 @@ import {
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
 
+import { PG_UNIQUE_VIOLATION } from '../common/constants/postgres-errors';
 import { Database } from '../database.types';
 import { SupabaseService } from '../supabase/supabase.service';
 import { TourSyncDetailService } from './services/tour-sync-detail.service';
@@ -54,6 +55,44 @@ export class TourService {
     this.logger.log('Phase 4: Intro synchronization completed.');
 
     return { success: true, message: 'Full synchronization completed', count: result.count };
+  }
+
+  async createStamp(
+    userId: string,
+    landmarkId: number,
+  ): Promise<Database['public']['Tables']['stamps']['Row']> {
+    const supabase = this.supabaseService.getClient();
+
+    const { data: landmark, error: landmarkError } = await supabase
+      .from('landmark')
+      .select('contentid')
+      .eq('contentid', landmarkId)
+      .maybeSingle();
+
+    if (landmarkError) {
+      this.logger.error(`Failed to check landmark existence: ${landmarkError.message}`);
+      throw new InternalServerErrorException('Database error while checking landmark');
+    }
+
+    if (!landmark) {
+      throw new NotFoundException(`Landmark with ID ${landmarkId} not found`);
+    }
+
+    const { data, error: insertError } = await supabase
+      .from('stamps')
+      .insert({ user_id: userId, landmark_id: landmarkId })
+      .select()
+      .single();
+
+    if (insertError) {
+      if (insertError.code === PG_UNIQUE_VIOLATION) {
+        throw new BadRequestException('User already has a stamp for this landmark');
+      }
+      this.logger.error(`Failed to create stamp: ${insertError.message}`);
+      throw new InternalServerErrorException('Failed to create stamp');
+    }
+
+    return data;
   }
 
   async syncLandmarkList() {

@@ -2,6 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 
 import { AuthModule } from '../auth/auth.module';
+import { OptionalAuthGuard } from '../auth/optional-auth.guard';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { TourSyncDetailService } from './services/tour-sync-detail.service';
 import { TourSyncImageService } from './services/tour-sync-image.service';
@@ -21,6 +22,7 @@ import { TourApiService } from './tour-api.service';
     TourSyncDetailService,
     TourSyncImageService,
     TourSyncIntroService,
+    OptionalAuthGuard,
   ],
 })
 export class TourModule {}

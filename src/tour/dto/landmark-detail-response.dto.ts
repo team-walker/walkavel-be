@@ -110,4 +110,8 @@ export class LandmarkDetailResponseDto {
   images: LandmarkImageDto[];
 
   intro?: LandmarkIntroDto | null;
+  /** Whether the current user already acquired this stamp.
+   * @example false
+   */
+  isStamped: boolean;
 }

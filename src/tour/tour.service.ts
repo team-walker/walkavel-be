@@ -124,20 +124,34 @@ export class TourService {
     return data;
   }
 
-  async getLandmarkDetail(contentId: number): Promise<{
+  async getLandmarkDetail(
+    contentId: number,
+    userId?: string,
+  ): Promise<{
     detail: Database['public']['Tables']['landmark_detail']['Row'];
     images: Database['public']['Tables']['landmark_image']['Row'][];
     intro: Database['public']['Tables']['landmark_intro']['Row'] | null;
+    isStamped: boolean;
   }> {
     if (!Number.isInteger(contentId) || contentId < 1) {
       throw new BadRequestException('contentId must be a positive integer');
     }
 
     const supabase = this.supabaseService.getClient() as unknown as SupabaseClient<Database>;
-    const [detailResult, imagesResult, introResult] = await Promise.all([
+    const stampResultPromise = userId
+      ? supabase
+          .from('stamps')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('landmark_id', contentId)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null });
+
+    const [detailResult, imagesResult, introResult, stampResult] = await Promise.all([
       supabase.from('landmark_detail').select('*').eq('contentid', contentId).maybeSingle(),
       supabase.from('landmark_image').select('*').eq('contentid', contentId).order('id'),
       supabase.from('landmark_intro').select('*').eq('contentid', contentId).maybeSingle(),
+      stampResultPromise,
     ]);
 
     if (detailResult.error) {
@@ -159,10 +173,16 @@ export class TourService {
       throw new InternalServerErrorException('Failed to fetch landmark intro');
     }
 
+    if (stampResult.error) {
+      this.logger.error(`Error checking stamp status: ${stampResult.error.message}`);
+      throw new InternalServerErrorException('Failed to fetch stamp status');
+    }
+
     return {
       detail: detailResult.data,
       images: imagesResult.data ?? [],
       intro: introResult.data ?? null,
+      isStamped: !!stampResult.data,
     };
   }
 

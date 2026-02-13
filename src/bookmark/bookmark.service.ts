@@ -98,9 +98,9 @@ export class BookmarkService {
         contentId:contentid,
         createdAt:created_at,
         landmark (
-          contentId:contentid,
+          contentid,
           title,
-          firstImage:firstimage,
+          firstimage,
           addr1,
           cat1,
           cat2,

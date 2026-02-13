@@ -11,6 +11,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { PG_UNIQUE_VIOLATION } from '../common/constants/postgres-errors';
 import { Database } from '../database.types';
 import { SupabaseService } from '../supabase/supabase.service';
+import { LandmarkDetailResponseDto } from './dto/landmark-detail-response.dto';
 import { TourSyncDetailService } from './services/tour-sync-detail.service';
 import { TourSyncImageService } from './services/tour-sync-image.service';
 import { TourSyncIntroService } from './services/tour-sync-intro.service';
@@ -124,15 +125,7 @@ export class TourService {
     return data;
   }
 
-  async getLandmarkDetail(
-    contentId: number,
-    userId?: string,
-  ): Promise<{
-    detail: Database['public']['Tables']['landmark_detail']['Row'];
-    images: Database['public']['Tables']['landmark_image']['Row'][];
-    intro: Database['public']['Tables']['landmark_intro']['Row'] | null;
-    isStamped: boolean;
-  }> {
+  async getLandmarkDetail(contentId: number, userId?: string): Promise<LandmarkDetailResponseDto> {
     if (!Number.isInteger(contentId) || contentId < 1) {
       throw new BadRequestException('contentId must be a positive integer');
     }

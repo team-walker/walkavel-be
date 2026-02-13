@@ -1,10 +1,12 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+﻿import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
 
 import { AuthService } from './auth.service';
 import type { RequestWithUser } from './interfaces/request-with-user.interface';
 
 @Injectable()
 export class OptionalAuthGuard implements CanActivate {
+  private readonly logger = new Logger(OptionalAuthGuard.name);
+
   constructor(private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -20,9 +22,10 @@ export class OptionalAuthGuard implements CanActivate {
       if (type === 'Bearer' && token) {
         request.user = await this.authService.verifyToken(token);
       }
-    } catch {
-      // Optional auth: ignore malformed/expired token and continue as guest.
+    } catch (error) {
+      this.logger.debug(`Optional auth failed: ${(error as Error).message}`);
     }
+
     return true;
   }
 }

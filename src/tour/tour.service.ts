@@ -63,7 +63,6 @@ export class TourService {
   ): Promise<Database['public']['Tables']['stamps']['Row']> {
     const supabase = this.supabaseService.getClient();
 
-    // 1. 랜드마크 존재 여부 확인
     const { data: landmark, error: landmarkError } = await supabase
       .from('landmark')
       .select('contentid')

@@ -8,6 +8,7 @@ import {
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
 
+import { PG_UNIQUE_VIOLATION } from '../common/constants/postgres-errors';
 import { Database } from '../database.types';
 import { SupabaseService } from '../supabase/supabase.service';
 import { TourSyncDetailService } from './services/tour-sync-detail.service';
@@ -62,7 +63,6 @@ export class TourService {
   ): Promise<Database['public']['Tables']['stamps']['Row']> {
     const supabase = this.supabaseService.getClient();
 
-    // 1. 랜드마크 존재 여부 확인
     const { data: landmark, error: landmarkError } = await supabase
       .from('landmark')
       .select('contentid')
@@ -78,7 +78,6 @@ export class TourService {
       throw new NotFoundException(`Landmark with ID ${landmarkId} not found`);
     }
 
-    // 2. 스탬프 생성 (중복 시 DB 제약조건에 의해 에러 발생)
     const { data, error: insertError } = await supabase
       .from('stamps')
       .insert({ user_id: userId, landmark_id: landmarkId })
@@ -86,7 +85,7 @@ export class TourService {
       .single();
 
     if (insertError) {
-      if (insertError.code === '23505') {
+      if (insertError.code === PG_UNIQUE_VIOLATION) {
         throw new BadRequestException('User already has a stamp for this landmark');
       }
       this.logger.error(`Failed to create stamp: ${insertError.message}`);

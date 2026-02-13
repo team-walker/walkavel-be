@@ -1,26 +1,27 @@
 class UserResponseDto {
-  /** User UUID.
-   * @example "uuid-1234"
+  /**
+   * 사용자 UUID
+   * @example 'uuid-1234'
    */
   id: string;
 
-  /** User email.
-   * @example "user@example.com"
+  /**
+   * 사용자 이메일
+   * @example 'user@example.com'
    */
   email?: string;
 
-  /** Last sign-in timestamp (ISO-8601).
-   * @example "2025-06-13T00:00:00Z"
+  /**
+   * 마지막 로그인 시각
+   * @example '2025-06-13T00:00:00Z'
    */
   last_sign_in_at?: string;
 }
 
 export class AuthMeResponseDto {
-  /** Auth response message.
-   * @example "���� ����"
-   */
+  /** @example '인증 성공' */
   message: string;
 
-  /** Authenticated user profile. */
+  /** Supabase 유저 정보 */
   user: UserResponseDto;
 }

@@ -5,7 +5,7 @@ export class LandmarkDetail {
   /** 랜드마크 명칭 */
   title: string;
 
-  /** 이미지 URL */
+  /** 이미지 URL (없을 경우 null) */
   image: string | null;
 
   /** 획득 일시 */

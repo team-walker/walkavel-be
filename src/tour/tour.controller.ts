@@ -1,22 +1,49 @@
-import { Controller, Get, Param, ParseIntPipe, Post, Query, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiExcludeEndpoint,
   ApiNotFoundResponse,
+  ApiOperation,
   ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { User } from '@supabase/supabase-js';
 
+import { AuthGuard } from '../auth/auth.guard';
+import type { RequestWithUser } from '../auth/interfaces/request-with-user.interface';
 import { OptionalAuthGuard } from '../auth/optional-auth.guard';
+import { CreateStampDto } from './dto/create-stamp.dto';
 import { LandmarkDto } from './dto/landmark.dto';
 import { LandmarkDetailResponseDto } from './dto/landmark-detail-response.dto';
 import { SyncTourDetailResponseDto, SyncTourResponseDto } from './dto/sync-tour-response.dto';
 import { TourService } from './tour.service';
 
+@ApiTags('Tour')
 @Controller('tour')
 export class TourController {
   constructor(private readonly tourService: TourService) {}
+
+  @Post('stamps')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '스탬프 찍기' })
+  @ApiResponse({ status: 201, description: '스탬프 생성 성공' })
+  @ApiBadRequestResponse({ description: '이미 스탬프를 보유하고 있거나 잘못된 요청' })
+  @ApiNotFoundResponse({ description: '랜드마크를 찾을 수 없음' })
+  async createStamp(@Req() req: RequestWithUser, @Body() createStampDto: CreateStampDto) {
+    return this.tourService.createStamp(req.user.id, createStampDto.landmarkId);
+  }
 
   @Post('sync')
   @ApiExcludeEndpoint()

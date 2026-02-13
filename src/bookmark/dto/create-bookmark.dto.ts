@@ -1,7 +1,8 @@
 import { IsNotEmpty, IsNumber, Min } from 'class-validator';
 
 export class CreateBookmarkDto {
-  /** Landmark content ID to bookmark.
+  /**
+   * The content ID of the landmark.
    * @example 126508
    */
   @IsNotEmpty()

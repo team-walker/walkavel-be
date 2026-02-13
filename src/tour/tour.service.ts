@@ -56,6 +56,46 @@ export class TourService {
     return { success: true, message: 'Full synchronization completed', count: result.count };
   }
 
+  async createStamp(
+    userId: string,
+    landmarkId: number,
+  ): Promise<Database['public']['Tables']['stamps']['Row']> {
+    const supabase = this.supabaseService.getClient();
+
+    // 1. 랜드마크 존재 여부 확인
+    const { data: landmark, error: landmarkError } = await supabase
+      .from('landmark')
+      .select('contentid')
+      .eq('contentid', landmarkId)
+      .maybeSingle();
+
+    if (landmarkError) {
+      this.logger.error(`Failed to check landmark existence: ${landmarkError.message}`);
+      throw new InternalServerErrorException('Database error while checking landmark');
+    }
+
+    if (!landmark) {
+      throw new NotFoundException(`Landmark with ID ${landmarkId} not found`);
+    }
+
+    // 2. 스탬프 생성 (중복 시 DB 제약조건에 의해 에러 발생)
+    const { data, error: insertError } = await supabase
+      .from('stamps')
+      .insert({ user_id: userId, landmark_id: landmarkId })
+      .select()
+      .single();
+
+    if (insertError) {
+      if (insertError.code === '23505') {
+        throw new BadRequestException('User already has a stamp for this landmark');
+      }
+      this.logger.error(`Failed to create stamp: ${insertError.message}`);
+      throw new InternalServerErrorException('Failed to create stamp');
+    }
+
+    return data;
+  }
+
   async syncLandmarkList() {
     return this.tourSyncListService.syncLandmarkList();
   }

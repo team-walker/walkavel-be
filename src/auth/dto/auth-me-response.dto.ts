@@ -3,10 +3,12 @@ class UserResponseDto {
    * @example "uuid-1234"
    */
   id: string;
+
   /** User email.
    * @example "user@example.com"
    */
   email?: string;
+
   /** Last sign-in timestamp (ISO-8601).
    * @example "2025-06-13T00:00:00Z"
    */
@@ -15,9 +17,10 @@ class UserResponseDto {
 
 export class AuthMeResponseDto {
   /** Auth response message.
-   * @example "인증 성공"
+   * @example "���� ����"
    */
   message: string;
+
   /** Authenticated user profile. */
   user: UserResponseDto;
 }

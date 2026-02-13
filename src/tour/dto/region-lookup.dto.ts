@@ -1,23 +1,17 @@
 export class RegionTokenDto {
-  /** Administrative region code token.
-   * @example "11"
-   */
+  /** @example '' */
   code?: string;
-  /** Full region name.
-   * @example "Seoul Special City"
-   */
+
+  /** @example '서울특별시' */
   longName: string;
-  /** Short region name.
-   * @example "Seoul"
-   */
+
+  /** @example '서울특별시' */
   shortName: string;
-  /** Region token types.
-   * @example ["SIDO"]
-   */
+
+  /** @example ["SIDO"] */
   types: string[];
 }
 
 export class LandmarksByRegionRequestDto {
-  /** Region tokens used for filtering. */
   regions: RegionTokenDto[];
 }

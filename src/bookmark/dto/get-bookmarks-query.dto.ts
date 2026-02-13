@@ -3,7 +3,7 @@ import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class GetBookmarksQueryDto {
   /**
-   * Number of items per page
+   * 페이지당 항목 수
    * @default 20
    */
   @IsOptional()
@@ -14,7 +14,7 @@ export class GetBookmarksQueryDto {
   limit: number = 20;
 
   /**
-   * Number of items to skip
+   * 건너뛸 항목 수 (오프셋)
    * @default 0
    */
   @IsOptional()

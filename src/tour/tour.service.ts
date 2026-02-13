@@ -79,7 +79,6 @@ export class TourService {
       throw new NotFoundException(`Landmark with ID ${landmarkId} not found`);
     }
 
-    // 2. 스탬프 생성 (중복 시 DB 제약조건에 의해 에러 발생)
     const { data, error: insertError } = await supabase
       .from('stamps')
       .insert({ user_id: userId, landmark_id: landmarkId })

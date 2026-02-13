@@ -8,6 +8,7 @@ import {
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
 
+import { PG_UNIQUE_VIOLATION } from '../common/constants/postgres-errors';
 import { Database } from '../database.types';
 import { SupabaseService } from '../supabase/supabase.service';
 import { TourSyncDetailService } from './services/tour-sync-detail.service';
@@ -86,7 +87,7 @@ export class TourService {
       .single();
 
     if (insertError) {
-      if (insertError.code === '23505') {
+      if (insertError.code === PG_UNIQUE_VIOLATION) {
         throw new BadRequestException('User already has a stamp for this landmark');
       }
       this.logger.error(`Failed to create stamp: ${insertError.message}`);

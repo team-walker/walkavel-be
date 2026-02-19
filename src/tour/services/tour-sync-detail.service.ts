@@ -18,35 +18,18 @@ export class TourSyncDetailService {
   ) {}
 
   async syncLandmarkDetails(forceUpdateIds?: number[]) {
-    const supabase = this.supabaseService.getClient();
+    // const supabase = this.supabaseService.getClient();
 
-    let toSync: { contentid: number }[] = [];
-
-    if (Array.isArray(forceUpdateIds) && forceUpdateIds.length > 0) {
-      this.logger.log(`Syncing details for ${forceUpdateIds.length} provided items...`);
-      toSync = forceUpdateIds.map((id) => ({ contentid: id }));
-    } else {
-      const { data: landmarks, error: listError } = await supabase
-        .from('landmark_combined')
-        .select('contentid, overview');
-
-      if (listError) {
-        logErrorWithContext(this.logger, 'Error fetching data for detail sync', listError);
-        throw new Error(getErrorMessage(listError));
-      }
-
-      toSync = landmarks.filter((l) => !l.overview);
-      this.logger.log(
-        `Found ${landmarks.length} total landmarks. ${toSync.length} need detail update (missing overview).`,
-      );
-    }
-
-    if (toSync.length === 0) {
-      this.logger.log('All landmark details seem populated.');
+    if (!forceUpdateIds || forceUpdateIds.length === 0) {
+      this.logger.log('No updated items to sync details for. Skipping.');
       return [];
     }
 
-    this.logger.log(`Starting detailed sync for ${toSync.length} items...`);
+    this.logger.log(
+      `Syncing details for ${forceUpdateIds.length} provided items (Forced update)...`,
+    );
+
+    const toSync = forceUpdateIds.map((id) => ({ contentid: id }));
 
     let currentBatch: LandmarkCombinedEntity[] = [];
     let processedCount = 0;

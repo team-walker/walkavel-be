@@ -13,4 +13,9 @@ export class SyncTourDataResponseDto {
    * @example "Tour data synced successfully"
    */
   message?: string;
+
+  /** Updated content IDs.
+   * @example [126508, 126509]
+   */
+  updatedIds?: number[];
 }

@@ -1,4 +1,4 @@
-import { LandmarkDetailEntity, LandmarkEntity } from '../interfaces/landmark.interface';
+import { LandmarkCombinedEntity } from '../interfaces/landmark.interface';
 import { LandmarkImageEntity } from '../interfaces/landmark-image.interface';
 import { LandmarkIntroEntity } from '../interfaces/landmark-intro.interface';
 import {
@@ -12,7 +12,7 @@ import { parseToSafeFloat, parseToSafeInteger } from './helpers/number.helper';
 import { formatApiTimestamp } from './helpers/timestamp.helper';
 
 export class LandmarkMapper {
-  static toLandmarkEntity(item: TourApiItem): LandmarkEntity {
+  static toLandmarkCombinedEntity(item: TourApiItem): LandmarkCombinedEntity {
     return {
       contentid:
         parseToSafeInteger(item.contentid) ??
@@ -43,10 +43,12 @@ export class LandmarkMapper {
       lclssystm1: item.lclsSystm1 ?? null,
       lclssystm2: item.lclsSystm2 ?? null,
       lclssystm3: item.lclsSystm3 ?? null,
+      homepage: null,
+      overview: null,
     };
   }
 
-  static toLandmarkDetailEntity(item: TourApiDetailItem): LandmarkDetailEntity {
+  static toLandmarkCombinedEntityFromDetail(item: TourApiDetailItem): LandmarkCombinedEntity {
     return {
       contentid: parseToSafeInteger(item.contentid) ?? 0,
       contenttypeid: parseToSafeInteger(item.contenttypeid) ?? 0,

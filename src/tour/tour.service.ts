@@ -41,7 +41,7 @@ export class TourService {
     this.logger.log(`Phase 1: List synchronization completed. Processed ${result.count} items.`);
 
     this.logger.log('Phase 2: Starting detailed tour data synchronization...');
-    const changedContentIds = (await this.syncLandmarkDetails()) ?? [];
+    const changedContentIds = (await this.syncLandmarkDetails(result.updatedIds)) ?? [];
     this.logger.log(
       `Phase 2: Detailed synchronization completed. (Updated ${changedContentIds.length} items)`,
     );
@@ -64,7 +64,7 @@ export class TourService {
     const supabase = this.supabaseService.getClient();
 
     const { data: landmark, error: landmarkError } = await supabase
-      .from('landmark')
+      .from('landmark_combined')
       .select('contentid')
       .eq('contentid', landmarkId)
       .maybeSingle();
@@ -99,8 +99,8 @@ export class TourService {
     return this.tourSyncListService.syncLandmarkList();
   }
 
-  async syncLandmarkDetails() {
-    return this.tourSyncDetailService.syncLandmarkDetails();
+  async syncLandmarkDetails(forceUpdateIds?: number[]) {
+    return this.tourSyncDetailService.syncLandmarkDetails(forceUpdateIds);
   }
 
   async syncLandmarkImages(forceUpdateIds?: number[]) {
@@ -114,7 +114,7 @@ export class TourService {
   async getLandmarks() {
     const supabase = this.supabaseService.getClient();
 
-    const { data, error } = await supabase.from('landmark').select('*');
+    const { data, error } = await supabase.from('landmark_combined').select('*');
 
     if (error) {
       this.logger.error(`Error fetching landmarks: ${error.message}`);
@@ -128,7 +128,7 @@ export class TourService {
     contentId: number,
     userId?: string,
   ): Promise<{
-    detail: Database['public']['Tables']['landmark_detail']['Row'];
+    detail: Database['public']['Tables']['landmark_combined']['Row'];
     images: Database['public']['Tables']['landmark_image']['Row'][];
     intro: Database['public']['Tables']['landmark_intro']['Row'] | null;
     isStamped: boolean;
@@ -148,7 +148,7 @@ export class TourService {
       : Promise.resolve({ data: null, error: null });
 
     const [detailResult, imagesResult, introResult, stampResult] = await Promise.all([
-      supabase.from('landmark_detail').select('*').eq('contentid', contentId).maybeSingle(),
+      supabase.from('landmark_combined').select('*').eq('contentid', contentId).maybeSingle(),
       supabase.from('landmark_image').select('*').eq('contentid', contentId).order('id'),
       supabase.from('landmark_intro').select('*').eq('contentid', contentId).maybeSingle(),
       stampResultPromise,
@@ -245,7 +245,7 @@ export class TourService {
   async getLandmarksByRegionNames(
     sidoName: string,
     sigunguName: string,
-  ): Promise<Database['public']['Tables']['landmark']['Row'][]> {
+  ): Promise<Database['public']['Tables']['landmark_combined']['Row'][]> {
     if (!sidoName || !sigunguName) {
       throw new BadRequestException('sido and sigugun are required');
     }
@@ -271,7 +271,7 @@ export class TourService {
     }
 
     const { data: landmarks, error } = await supabase
-      .from('landmark')
+      .from('landmark_combined')
       .select('*')
       .eq('areacode', mapped.area_code)
       .eq('sigungucode', mapped.sigungu_code)

@@ -21,7 +21,7 @@ export class UserService {
         `
         landmark_id,
         created_at,
-        landmark:landmark_id (title, firstimage)
+        landmark_combined!fk_stamps_landmark (title, firstimage)
       `,
         { count: 'exact' },
       )
@@ -33,15 +33,20 @@ export class UserService {
       throw new InternalServerErrorException('DB 조회 오류');
     }
 
-    const stampData = data as StampRow[] | null;
-    const items = stampData ?? [];
+    const items = data as unknown as StampRow[];
 
-    const landmarks = items.map((item: StampRow) => ({
-      landmarkId: item.landmark_id,
-      title: item.landmark?.title ?? DEFAULT_LANDMARK_TITLE,
-      image: item.landmark?.firstimage ?? null,
-      obtainedAt: item.created_at,
-    }));
+    const landmarks = items.map((item) => {
+      const combined = item.landmark_combined as {
+        title: string;
+        firstimage: string | null;
+      } | null;
+      return {
+        landmarkId: item.landmark_id,
+        title: combined?.title ?? DEFAULT_LANDMARK_TITLE,
+        image: combined?.firstimage ?? null,
+        obtainedAt: item.created_at,
+      };
+    });
 
     return {
       totalCount: count || 0,

@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { Database } from '../../database.types';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { getErrorMessage, logErrorWithContext } from '../../utils/error.util';
-import { LandmarkDetailEntity } from '../interfaces/landmark.interface';
+import { LandmarkCombinedEntity } from '../interfaces/landmark.interface';
 import { TourApiService } from '../tour-api.service';
 
 @Injectable()
@@ -16,53 +17,38 @@ export class TourSyncDetailService {
     private readonly supabaseService: SupabaseService,
   ) {}
 
-  async syncLandmarkDetails() {
+  async syncLandmarkDetails(forceUpdateIds?: number[]) {
     const supabase = this.supabaseService.getClient();
 
-    const { data: allLandmarks, error: listError } = await supabase
-      .from('landmark')
-      .select('contentid, modifiedtime');
+    let toSync: { contentid: number }[] = [];
 
-    const { data: allDetails, error: detailError } = await supabase
-      .from('landmark_detail')
-      .select('contentid, modifiedtime');
+    if (Array.isArray(forceUpdateIds) && forceUpdateIds.length > 0) {
+      this.logger.log(`Syncing details for ${forceUpdateIds.length} provided items...`);
+      toSync = forceUpdateIds.map((id) => ({ contentid: id }));
+    } else {
+      const { data: landmarks, error: listError } = await supabase
+        .from('landmark_combined')
+        .select('contentid, overview');
 
-    if (listError || detailError) {
-      logErrorWithContext(
-        this.logger,
-        'Error fetching data for change detection',
-        listError || detailError,
-      );
-      throw new Error(getErrorMessage(listError || detailError));
-    }
-
-    const detailMap = new Map(allDetails?.map((d) => [d.contentid, d.modifiedtime]) || []);
-
-    const toSync = allLandmarks.filter((l) => {
-      const detailModifiedTime = detailMap.get(l.contentid);
-
-      if (!detailModifiedTime) {
-        return true;
+      if (listError) {
+        logErrorWithContext(this.logger, 'Error fetching data for detail sync', listError);
+        throw new Error(getErrorMessage(listError));
       }
 
-      if (!l.modifiedtime) return false;
-
-      const isChanged = new Date(l.modifiedtime) > new Date(detailModifiedTime);
-      return isChanged;
-    });
-
-    this.logger.log(
-      `Found ${allLandmarks.length} total landmarks. ${toSync.length} need update based on modifiedtime comparison between landmark and landmark_detail.`,
-    );
+      toSync = landmarks.filter((l) => !l.overview);
+      this.logger.log(
+        `Found ${landmarks.length} total landmarks. ${toSync.length} need detail update (missing overview).`,
+      );
+    }
 
     if (toSync.length === 0) {
-      this.logger.log('All landmark details are already up to date.');
+      this.logger.log('All landmark details seem populated.');
       return [];
     }
 
     this.logger.log(`Starting detailed sync for ${toSync.length} items...`);
 
-    let currentBatch: LandmarkDetailEntity[] = [];
+    let currentBatch: LandmarkCombinedEntity[] = [];
     let processedCount = 0;
     const processedIds: number[] = [];
 
@@ -101,11 +87,24 @@ export class TourSyncDetailService {
     return processedIds;
   }
 
-  private async upsertBatch(batch: LandmarkDetailEntity[]) {
+  private async upsertBatch(batch: LandmarkCombinedEntity[]) {
     const supabase = this.supabaseService.getClient();
+
+    // We use 'any' cast here because we are doing a partial update via upsert.
+    // We know the contentid exists (from list sync), and we only want to update homepage/overview.
+    // However, upsert types require all non-null fields to be present for the potential 'insert' case.
+    const updates = batch.map((item) => ({
+      contentid: item.contentid,
+      homepage: item.homepage,
+      overview: item.overview,
+      title: item.title,
+    }));
+
     const { error: upsertError } = await supabase
-      .from('landmark_detail')
-      .upsert(batch, { onConflict: 'contentid' });
+      .from('landmark_combined')
+      .upsert(updates as unknown as Database['public']['Tables']['landmark_combined']['Insert'][], {
+        onConflict: 'contentid',
+      });
 
     if (upsertError) {
       logErrorWithContext(this.logger, 'Error upserting details', upsertError);

@@ -36,7 +36,7 @@ export class TourSyncImageService {
 
     const existingIds = new Set(existingImages?.map((img) => img.contentid) || []);
 
-    const { data: landmarks, error } = await supabase.from('landmark').select('contentid');
+    const { data: landmarks, error } = await supabase.from('landmark_combined').select('contentid');
 
     if (error || !landmarks) {
       logErrorWithContext(this.logger, 'Error fetching landmarks for image sync', error);

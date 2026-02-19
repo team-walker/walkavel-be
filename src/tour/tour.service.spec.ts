@@ -68,7 +68,7 @@ describe('TourService', () => {
         region_sigungu_map: {
           maybeSingle: { data: { area_code: 1, sigungu_code: 2 }, error: null },
         },
-        landmark: {
+        landmark_combined: {
           order: { data: [{ contentid: 1 }, { contentid: 2 }], error: null },
         },
       });
@@ -78,7 +78,7 @@ describe('TourService', () => {
 
       expect(result).toHaveLength(2);
       expect(supabase.from).toHaveBeenCalledWith('region_sigungu_map');
-      expect(supabase.from).toHaveBeenCalledWith('landmark');
+      expect(supabase.from).toHaveBeenCalledWith('landmark_combined');
     });
 
     it('throws BadRequest when missing params', async () => {
@@ -94,7 +94,7 @@ describe('TourService', () => {
   describe('getLandmarkDetail', () => {
     it('returns detail + images + intro', async () => {
       const supabase = createSupabaseMock({
-        landmark_detail: {
+        landmark_combined: {
           maybeSingle: { data: { contentid: 100, title: 'A' }, error: null },
         },
         landmark_image: {
@@ -116,7 +116,7 @@ describe('TourService', () => {
 
     it('returns isStamped=true when user already has stamp', async () => {
       const supabase = createSupabaseMock({
-        landmark_detail: {
+        landmark_combined: {
           maybeSingle: { data: { contentid: 100, title: 'A' }, error: null },
         },
         landmark_image: {
@@ -139,7 +139,7 @@ describe('TourService', () => {
 
     it('throws NotFound when detail missing', async () => {
       const supabase = createSupabaseMock({
-        landmark_detail: {
+        landmark_combined: {
           maybeSingle: { data: null, error: null },
         },
       });
@@ -150,7 +150,7 @@ describe('TourService', () => {
 
     it('throws InternalServerError when images query fails', async () => {
       const supabase = createSupabaseMock({
-        landmark_detail: {
+        landmark_combined: {
           maybeSingle: { data: { contentid: 100 }, error: null },
         },
         landmark_image: {

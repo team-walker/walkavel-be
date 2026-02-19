@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { getErrorMessage, logErrorWithContext } from '../../utils/error.util';
 import { SyncTourDataResponseDto } from '../dto/sync-tour-data.dto';
-import { LandmarkEntity } from '../interfaces/landmark.interface';
+import { LandmarkCombinedEntity } from '../interfaces/landmark.interface';
 import { TourApiService } from '../tour-api.service';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class TourSyncListService {
     try {
       this.logger.log('Fetching tour data from external API...');
 
-      const records: LandmarkEntity[] = await this.tourApiService.fetchLandmarkList();
+      const records: LandmarkCombinedEntity[] = await this.tourApiService.fetchLandmarkList();
 
       if (!records || records.length === 0) {
         this.logger.error('No items found or invalid structure');
@@ -31,14 +31,14 @@ export class TourSyncListService {
       const supabase = this.supabaseService.getClient();
 
       const { data: existingData, error: fetchError } = await supabase
-        .from('landmark')
+        .from('landmark_combined')
         .select('contentid, modifiedtime');
 
       if (fetchError) {
         logErrorWithContext(this.logger, 'Error fetching existing landmarks', fetchError);
       }
 
-      const existingMap = new Map(
+      const existingMap = new Map<number, string | null>(
         existingData?.map((item) => [item.contentid, item.modifiedtime]) || [],
       );
 
@@ -50,6 +50,10 @@ export class TourSyncListService {
         if (!record.modifiedtime) return false;
 
         const recordTime = new Date(record.modifiedtime).getTime();
+        // existingModifiedTime is guaranteed to be string here because of the check above (!existingModifiedTime returns true if null/undefined/empty string)
+        // actually if explicitly null, it returns true which means we update.
+        // wait, if existingModifiedTime is null, !existingModifiedTime is true. So we update. Correct.
+        // So here existingModifiedTime is string.
         const existingTime = new Date(existingModifiedTime).getTime();
 
         return recordTime > existingTime;
@@ -57,7 +61,7 @@ export class TourSyncListService {
 
       if (toUpdate.length === 0) {
         this.logger.log('No changes detected. Skipping update.');
-        return { success: true, count: 0 };
+        return { success: true, count: 0, updatedIds: [] };
       }
 
       this.logger.log(
@@ -65,7 +69,7 @@ export class TourSyncListService {
       );
 
       const { error } = await supabase
-        .from('landmark')
+        .from('landmark_combined')
         .upsert(toUpdate, { onConflict: 'contentid' });
 
       if (error) {
@@ -75,7 +79,11 @@ export class TourSyncListService {
 
       this.logger.log(`Data successfully synced! (${toUpdate.length} items updated)`);
 
-      return { success: true, count: toUpdate.length };
+      return {
+        success: true,
+        count: toUpdate.length,
+        updatedIds: toUpdate.map((item) => item.contentid),
+      };
     } catch (error) {
       logErrorWithContext(this.logger, 'Error syncing tour data', error);
       throw new Error(getErrorMessage(error));

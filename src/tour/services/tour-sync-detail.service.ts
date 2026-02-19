@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { Database } from '../../database.types';
 import { SupabaseService } from '../../supabase/supabase.service';
-import { getErrorMessage, logErrorWithContext } from '../../utils/error.util';
+import { logErrorWithContext } from '../../utils/error.util';
 import { LandmarkCombinedEntity } from '../interfaces/landmark.interface';
 import { TourApiService } from '../tour-api.service';
 
@@ -71,22 +71,22 @@ export class TourSyncDetailService {
   private async upsertBatch(batch: LandmarkCombinedEntity[]) {
     const supabase = this.supabaseService.getClient();
 
-    const updates = batch.map((item) => ({
-      contentid: item.contentid,
-      homepage: item.homepage,
-      overview: item.overview,
-      title: item.title,
-    }));
+    const updates: Database['public']['Tables']['landmark_combined']['Insert'][] = batch.map(
+      (item) => ({
+        contentid: item.contentid,
+        homepage: item.homepage,
+        overview: item.overview,
+        title: item.title,
+      }),
+    );
 
-    const { error: upsertError } = await supabase
-      .from('landmark_combined')
-      .upsert(updates as unknown as Database['public']['Tables']['landmark_combined']['Insert'][], {
-        onConflict: 'contentid',
-      });
+    const { error: upsertError } = await supabase.from('landmark_combined').upsert(updates, {
+      onConflict: 'contentid',
+    });
 
     if (upsertError) {
       logErrorWithContext(this.logger, 'Error upserting details', upsertError);
-      throw new Error(getErrorMessage(upsertError));
+      throw upsertError;
     }
   }
 }

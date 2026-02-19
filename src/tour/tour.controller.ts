@@ -46,6 +46,7 @@ export class TourController {
   }
 
   @Post('sync')
+  @ApiExcludeEndpoint()
   async syncAllLandmarks() {
     return this.tourService.syncAllLandmarkData();
   }

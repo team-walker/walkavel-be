@@ -33,20 +33,14 @@ export class UserService {
       throw new InternalServerErrorException('DB 조회 오류');
     }
 
-    const items = data as unknown as StampRow[];
+    const items = (data as unknown as StampRow[]) ?? [];
 
-    const landmarks = items.map((item) => {
-      const combined = item.landmark_combined as {
-        title: string;
-        firstimage: string | null;
-      } | null;
-      return {
-        landmarkId: item.landmark_id,
-        title: combined?.title ?? DEFAULT_LANDMARK_TITLE,
-        image: combined?.firstimage ?? null,
-        obtainedAt: item.created_at,
-      };
-    });
+    const landmarks = items.map((item) => ({
+      landmarkId: item.landmark_id,
+      title: item.landmark_combined.title || DEFAULT_LANDMARK_TITLE,
+      image: item.landmark_combined.firstimage ?? null,
+      obtainedAt: item.created_at,
+    }));
 
     return {
       totalCount: count || 0,

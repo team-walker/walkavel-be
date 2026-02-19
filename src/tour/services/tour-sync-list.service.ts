@@ -50,10 +50,6 @@ export class TourSyncListService {
         if (!record.modifiedtime) return false;
 
         const recordTime = new Date(record.modifiedtime).getTime();
-        // existingModifiedTime is guaranteed to be string here because of the check above (!existingModifiedTime returns true if null/undefined/empty string)
-        // actually if explicitly null, it returns true which means we update.
-        // wait, if existingModifiedTime is null, !existingModifiedTime is true. So we update. Correct.
-        // So here existingModifiedTime is string.
         const existingTime = new Date(existingModifiedTime).getTime();
 
         return recordTime > existingTime;

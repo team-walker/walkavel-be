@@ -18,8 +18,6 @@ export class TourSyncDetailService {
   ) {}
 
   async syncLandmarkDetails(forceUpdateIds?: number[]) {
-    // const supabase = this.supabaseService.getClient();
-
     if (!forceUpdateIds || forceUpdateIds.length === 0) {
       this.logger.log('No updated items to sync details for. Skipping.');
       return [];
@@ -73,9 +71,6 @@ export class TourSyncDetailService {
   private async upsertBatch(batch: LandmarkCombinedEntity[]) {
     const supabase = this.supabaseService.getClient();
 
-    // We use 'any' cast here because we are doing a partial update via upsert.
-    // We know the contentid exists (from list sync), and we only want to update homepage/overview.
-    // However, upsert types require all non-null fields to be present for the potential 'insert' case.
     const updates = batch.map((item) => ({
       contentid: item.contentid,
       homepage: item.homepage,

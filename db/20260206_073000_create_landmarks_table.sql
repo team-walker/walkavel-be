@@ -31,38 +31,39 @@ CREATE TABLE public.landmark_combined (
   overview text,
   CONSTRAINT landmark_combined_pkey PRIMARY KEY (contentid)
 );
-CREATE TABLE public.landmark_image (
-  id integer NOT NULL DEFAULT nextval('landmark_image_id_seq'::regclass),
-  contentid bigint NOT NULL,
-  originimgurl text NOT NULL,
-  imgname text NOT NULL,
-  smallimageurl text,
-  cpyrhtdivcd character varying,
-  serialnum character varying,
-  CONSTRAINT landmark_image_pkey PRIMARY KEY (id),
-  CONSTRAINT landmark_image_contentid_fk FOREIGN KEY (contentid) REFERENCES public.landmark_combined(contentid)
-);
-CREATE TABLE public.landmark_intro (
-  contentid bigint NOT NULL,
-  contenttypeid integer NOT NULL,
-  heritage1 boolean DEFAULT false,
-  heritage2 boolean DEFAULT false,
-  heritage3 boolean DEFAULT false,
-  infocenter text,
-  opendate text,
-  restdate text,
-  expguide text,
-  expagerange text,
-  accomcount text,
-  useseason text,
-  usetime text,
-  parking text,
-  chkbabycarriage boolean DEFAULT false,
-  chkpet boolean DEFAULT false,
-  chkcreditcard boolean DEFAULT false,
-  CONSTRAINT landmark_intro_pkey PRIMARY KEY (contentid),
-  CONSTRAINT landmark_intro_contentid_fk FOREIGN KEY (contentid) REFERENCES public.landmark_combined(contentid)
-);
+create table public.landmark_image (
+  id serial not null,
+  contentid bigint not null,
+  originimgurl text not null,
+  imgname text not null,
+  smallimageurl text null,
+  cpyrhtdivcd character varying null,
+  serialnum character varying(20) null,
+  constraint landmark_image_pkey primary key (id),
+  constraint landmark_image_contentid_serialnum_unique unique (contentid, serialnum),
+  constraint landmark_image_contentid_fk foreign KEY (contentid) references landmark_combined (contentid) on delete CASCADE
+) TABLESPACE pg_default;
+create table public.landmark_intro (
+  contentid bigint not null,
+  contenttypeid integer not null,
+  heritage1 boolean null default false,
+  heritage2 boolean null default false,
+  heritage3 boolean null default false,
+  infocenter text null,
+  opendate text null,
+  restdate text null,
+  expguide text null,
+  expagerange text null,
+  accomcount text null,
+  useseason text null,
+  usetime text null,
+  parking text null,
+  chkbabycarriage boolean null default false,
+  chkpet boolean null default false,
+  chkcreditcard boolean null default false,
+  constraint landmark_intro_pkey primary key (contentid),
+  constraint landmark_intro_contentid_fk foreign KEY (contentid) references landmark_combined (contentid) on delete CASCADE
+) TABLESPACE pg_default;
 CREATE TABLE public.region_sigungu_map (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   area_code integer NOT NULL,

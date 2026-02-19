@@ -24,6 +24,6 @@ export interface LandmarkCombinedEntity {
   lclssystm1: string | null;
   lclssystm2: string | null;
   lclssystm3: string | null;
-  homepage: string | null;
-  overview: string | null;
+  homepage?: string | null;
+  overview?: string | null;
 }

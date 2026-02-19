@@ -43,8 +43,8 @@ export class LandmarkMapper {
       lclssystm1: item.lclsSystm1 ?? null,
       lclssystm2: item.lclsSystm2 ?? null,
       lclssystm3: item.lclsSystm3 ?? null,
-      homepage: null,
-      overview: null,
+      // homepage: null, // Avoid overwriting existing details
+      // overview: null, // Avoid overwriting existing details
     };
   }
 

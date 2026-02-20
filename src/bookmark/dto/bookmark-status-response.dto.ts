@@ -1,6 +1,6 @@
 export class BookmarkStatusResponseDto {
   /**
-   * Indicates if the content is bookmarked by the user.
+   * 북마크 등록 여부
    * @example true
    */
   isBookmarked: boolean;

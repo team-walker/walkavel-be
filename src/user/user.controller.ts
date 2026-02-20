@@ -1,5 +1,5 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { AuthGuard } from '../auth/auth.guard';
 import type { RequestWithUser } from '../auth/interfaces/request-with-user.interface';
@@ -13,9 +13,10 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  /**
+   * 내 스탬프 요약
+   */
   @Get('me/stamps/summary')
-  @ApiOperation({ summary: '내 스탬프 요약' })
-  @ApiResponse({ status: 200, type: StampSummaryDto })
   async getMyStampSummary(@Req() req: RequestWithUser): Promise<StampSummaryDto> {
     return this.userService.getStampSummary(req.user.id);
   }

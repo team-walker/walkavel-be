@@ -1,15 +1,18 @@
 export class SyncTourDataResponseDto {
-  /** Sync success status.
+  /**
+   * 성공 여부
    * @example true
    */
   success: boolean;
 
-  /** Number of processed records.
+  /**
+   * 처리된 레코드 수
    * @example 120
    */
   count?: number;
 
-  /** Sync result message.
+  /**
+   * 결과 메시지
    * @example "Tour data synced successfully"
    */
   message?: string;

@@ -11,7 +11,6 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { PG_UNIQUE_VIOLATION } from '../common/constants/postgres-errors';
 import { Database } from '../database.types';
 import { SupabaseService } from '../supabase/supabase.service';
-import { LandmarkDetailResponseDto } from './dto/landmark-detail-response.dto';
 import { TourSyncDetailService } from './services/tour-sync-detail.service';
 import { TourSyncImageService } from './services/tour-sync-image.service';
 import { TourSyncIntroService } from './services/tour-sync-intro.service';

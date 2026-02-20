@@ -1,6 +1,6 @@
 import { Database } from '../../database.types';
 
-type LandmarkRow = Database['public']['Tables']['landmark']['Row'];
+type LandmarkRow = Database['public']['Tables']['landmark_combined']['Row'];
 
 export class LandmarkDto implements Partial<LandmarkRow> {
   /**
@@ -143,4 +143,14 @@ export class LandmarkDto implements Partial<LandmarkRow> {
    * 지방자치단체 분류 3
    */
   lclssystm3?: string | null;
+
+  /**
+   * 홈페이지 주소
+   */
+  homepage?: string | null;
+
+  /**
+   * 개요
+   */
+  overview?: string | null;
 }

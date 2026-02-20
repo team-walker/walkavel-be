@@ -1,21 +1,8 @@
 import { Database } from '../../database.types';
 import { LandmarkDto } from './landmark.dto';
 
-type LandmarkDetailRow = Database['public']['Tables']['landmark_detail']['Row'];
 type LandmarkImageRow = Database['public']['Tables']['landmark_image']['Row'];
 type LandmarkIntroRow = Database['public']['Tables']['landmark_intro']['Row'];
-
-export class LandmarkDetailDto extends LandmarkDto implements Partial<LandmarkDetailRow> {
-  /**
-   * 홈페이지 URL
-   */
-  homepage?: string | null;
-
-  /**
-   * 개요 (HTML 포함 가능)
-   */
-  overview?: string | null;
-}
 
 export class LandmarkImageDto implements Partial<LandmarkImageRow> {
   /**
@@ -144,9 +131,9 @@ export class LandmarkIntroDto implements Partial<LandmarkIntroRow> {
 
 export class LandmarkDetailResponseDto {
   /**
-   * 랜드마크 상세 정보
+   * 랜드마크 상세 정보 (기본 정보 + 개요)
    */
-  detail: LandmarkDetailDto;
+  detail: LandmarkDto;
 
   /**
    * 랜드마크 이미지 목록

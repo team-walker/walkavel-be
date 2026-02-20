@@ -36,9 +36,9 @@ export class UserService {
     const items = (data as unknown as StampRow[]) ?? [];
 
     const landmarks = items.map((item) => ({
-      landmarkId: item.landmark_id,
+      contentid: item.landmark_id,
       title: item.landmark_combined.title || DEFAULT_LANDMARK_TITLE,
-      image: item.landmark_combined.firstimage ?? null,
+      firstimage: item.landmark_combined.firstimage ?? null,
       obtainedAt: item.created_at,
     }));
 

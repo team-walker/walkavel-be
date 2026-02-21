@@ -1,12 +1,22 @@
-import { PickType } from '@nestjs/swagger';
+export class LandmarkDetail {
+  /**
+   * 랜드마크 ID
+   * @example 126508
+   */
+  landmarkId: number;
 
-import { LandmarkDto } from '../../tour/dto/landmark.dto';
+  /**
+   * 제목
+   * @example "가야산"
+   */
+  title: string;
 
-export class LandmarkDetail extends PickType(LandmarkDto, [
-  'contentid',
-  'title',
-  'firstimage',
-] as const) {
+  /**
+   * 이미지 URL
+   * @example "http://tong.visitkorea.or.kr/cms/resource/12/2619112_image2_1.jpg"
+   */
+  image: string | null;
+
   /**
    * 획득 일시
    * @example '2026-02-07T10:00:00Z'

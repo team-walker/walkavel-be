@@ -34,7 +34,7 @@ export class BookmarkService {
         contentId:contentid,
         createdAt:created_at,
         landmark:landmark_combined (
-          contentId:contentid,
+          contentid,
           title,
           firstimage,
           addr1,
@@ -98,7 +98,7 @@ export class BookmarkService {
         contentId:contentid,
         createdAt:created_at,
         landmark:landmark_combined (
-          contentId:contentid,
+          contentid,
           title,
           firstimage,
           addr1,

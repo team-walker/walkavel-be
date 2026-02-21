@@ -21,7 +21,7 @@ export class UserService {
         `
         landmark_id,
         created_at,
-        landmark_combined!fk_stamps_landmark (title, firstimage)
+        landmark_combined (title, firstimage)
       `,
         { count: 'exact' },
       )
@@ -37,8 +37,8 @@ export class UserService {
 
     const landmarks = items.map((item) => ({
       contentid: item.landmark_id,
-      title: item.landmark_combined.title || DEFAULT_LANDMARK_TITLE,
-      firstimage: item.landmark_combined.firstimage ?? null,
+      title: item.landmark_combined?.title || DEFAULT_LANDMARK_TITLE,
+      firstimage: item.landmark_combined?.firstimage ?? null,
       obtainedAt: item.created_at,
     }));
 

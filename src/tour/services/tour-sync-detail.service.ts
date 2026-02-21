@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 
 import { Database } from '../../database.types';
 import { SupabaseService } from '../../supabase/supabase.service';
@@ -86,7 +86,7 @@ export class TourSyncDetailService {
 
     if (upsertError) {
       logErrorWithContext(this.logger, 'Error upserting details', upsertError);
-      throw upsertError;
+      throw new InternalServerErrorException(`Failed to upsert details: ${upsertError.message}`);
     }
   }
 }

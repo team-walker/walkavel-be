@@ -33,7 +33,7 @@ export class BookmarkService {
         userId:userid,
         contentId:contentid,
         createdAt:created_at,
-        landmark:landmark_combined!bookmark_landmark_fk (
+        landmark:landmark_combined (
           contentId:contentid,
           title,
           firstimage,
@@ -48,7 +48,7 @@ export class BookmarkService {
 
     if (error) {
       if (error.code === PG_FOREIGN_KEY_VIOLATION) {
-        if (error.message.includes('bookmark_landmark_fk')) {
+        if (error.message.includes('contentid') || error.message.includes('landmark')) {
           throw new NotFoundException('Landmark content does not exist');
         }
         this.logger.error(`Foreign key violation: ${error.message}`);
@@ -97,7 +97,7 @@ export class BookmarkService {
         userId:userid,
         contentId:contentid,
         createdAt:created_at,
-        landmark:landmark_combined!bookmark_landmark_fk (
+        landmark:landmark_combined (
           contentId:contentid,
           title,
           firstimage,

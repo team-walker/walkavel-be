@@ -4,5 +4,5 @@ export interface StampRow {
   landmark_combined: {
     title: string;
     firstimage: string | null;
-  };
+  } | null;
 }

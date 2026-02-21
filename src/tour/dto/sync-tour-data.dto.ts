@@ -17,7 +17,7 @@ export class SyncTourDataResponseDto {
    */
   message?: string;
 
-  /** Updated content IDs.
+  /** 업데이트된 콘텐츠 ID 목록
    * @example [126508, 126509]
    */
   updatedIds?: number[];

@@ -1,41 +1,44 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { PickType } from '@nestjs/swagger';
 
-class LandmarkSummaryDto {
-  @ApiProperty({ example: 126508 })
-  contentId: number;
+import { LandmarkDto } from '../../tour/dto/landmark.dto';
 
-  @ApiProperty({ example: '경복궁' })
-  title: string;
-
-  @ApiProperty({ example: 'http://...', nullable: true })
-  firstImage: string | null;
-
-  @ApiProperty({ example: '서울특별시 종로구...', nullable: true })
-  addr1: string | null;
-
-  @ApiProperty({ example: 'A02', nullable: true })
-  cat1: string | null;
-
-  @ApiProperty({ example: 'A0201', nullable: true })
-  cat2: string | null;
-
-  @ApiProperty({ example: 'A02010100', nullable: true })
-  cat3: string | null;
-}
+class LandmarkSummaryDto extends PickType(LandmarkDto, [
+  'contentid',
+  'title',
+  'firstimage',
+  'addr1',
+  'cat1',
+  'cat2',
+  'cat3',
+] as const) {}
 
 export class BookmarkResponseDto {
-  @ApiProperty({ example: 1 })
+  /**
+   * 북마크 ID
+   * @example 1
+   */
   id: number;
 
-  @ApiProperty({ example: 'uuid-1234' })
+  /**
+   * 사용자 UUID
+   * @example 'uuid-1234'
+   */
   userId: string;
 
-  @ApiProperty({ example: 126508 })
+  /**
+   * 콘텐츠 ID
+   * @example 126508
+   */
   contentId: number;
 
-  @ApiProperty({ example: '2026-02-07T14:30:00Z', nullable: true })
+  /**
+   * 생성일
+   * @example '2026-02-07T14:30:00Z'
+   */
   createdAt: string | null;
 
-  @ApiProperty({ type: LandmarkSummaryDto, nullable: true })
+  /**
+   * 랜드마크 정보
+   */
   landmark: LandmarkSummaryDto | null;
 }

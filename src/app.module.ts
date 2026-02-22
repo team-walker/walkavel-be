@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { TourModule } from './tour/tour.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TourModule } from './tour/tour.module';
     TourModule,
     AuthModule,
     BookmarkModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

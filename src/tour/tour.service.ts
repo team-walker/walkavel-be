@@ -8,6 +8,7 @@ import {
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
 
+import { PG_UNIQUE_VIOLATION } from '../common/constants/postgres-errors';
 import { Database } from '../database.types';
 import { SupabaseService } from '../supabase/supabase.service';
 import { TourSyncDetailService } from './services/tour-sync-detail.service';
@@ -40,7 +41,7 @@ export class TourService {
     this.logger.log(`Phase 1: List synchronization completed. Processed ${result.count} items.`);
 
     this.logger.log('Phase 2: Starting detailed tour data synchronization...');
-    const changedContentIds = (await this.syncLandmarkDetails()) ?? [];
+    const changedContentIds = (await this.syncLandmarkDetails(result.updatedIds)) ?? [];
     this.logger.log(
       `Phase 2: Detailed synchronization completed. (Updated ${changedContentIds.length} items)`,
     );
@@ -56,12 +57,50 @@ export class TourService {
     return { success: true, message: 'Full synchronization completed', count: result.count };
   }
 
+  async createStamp(
+    userId: string,
+    landmarkId: number,
+  ): Promise<Database['public']['Tables']['stamps']['Row']> {
+    const supabase = this.supabaseService.getClient();
+
+    const { data: landmark, error: landmarkError } = await supabase
+      .from('landmark_combined')
+      .select('contentid')
+      .eq('contentid', landmarkId)
+      .maybeSingle();
+
+    if (landmarkError) {
+      this.logger.error(`Failed to check landmark existence: ${landmarkError.message}`);
+      throw new InternalServerErrorException('Database error while checking landmark');
+    }
+
+    if (!landmark) {
+      throw new NotFoundException(`Landmark with ID ${landmarkId} not found`);
+    }
+
+    const { data, error: insertError } = await supabase
+      .from('stamps')
+      .insert({ user_id: userId, landmark_id: landmarkId })
+      .select()
+      .single();
+
+    if (insertError) {
+      if (insertError.code === PG_UNIQUE_VIOLATION) {
+        throw new BadRequestException('User already has a stamp for this landmark');
+      }
+      this.logger.error(`Failed to create stamp: ${insertError.message}`);
+      throw new InternalServerErrorException('Failed to create stamp');
+    }
+
+    return data;
+  }
+
   async syncLandmarkList() {
     return this.tourSyncListService.syncLandmarkList();
   }
 
-  async syncLandmarkDetails() {
-    return this.tourSyncDetailService.syncLandmarkDetails();
+  async syncLandmarkDetails(forceUpdateIds?: number[]) {
+    return this.tourSyncDetailService.syncLandmarkDetails(forceUpdateIds);
   }
 
   async syncLandmarkImages(forceUpdateIds?: number[]) {
@@ -75,7 +114,7 @@ export class TourService {
   async getLandmarks() {
     const supabase = this.supabaseService.getClient();
 
-    const { data, error } = await supabase.from('landmark').select('*');
+    const { data, error } = await supabase.from('landmark_combined').select('*');
 
     if (error) {
       this.logger.error(`Error fetching landmarks: ${error.message}`);
@@ -85,20 +124,34 @@ export class TourService {
     return data;
   }
 
-  async getLandmarkDetail(contentId: number): Promise<{
-    detail: Database['public']['Tables']['landmark_detail']['Row'];
+  async getLandmarkDetail(
+    contentId: number,
+    userId?: string,
+  ): Promise<{
+    detail: Database['public']['Tables']['landmark_combined']['Row'];
     images: Database['public']['Tables']['landmark_image']['Row'][];
     intro: Database['public']['Tables']['landmark_intro']['Row'] | null;
+    isStamped: boolean;
   }> {
     if (!Number.isInteger(contentId) || contentId < 1) {
       throw new BadRequestException('contentId must be a positive integer');
     }
 
     const supabase = this.supabaseService.getClient() as unknown as SupabaseClient<Database>;
-    const [detailResult, imagesResult, introResult] = await Promise.all([
-      supabase.from('landmark_detail').select('*').eq('contentid', contentId).maybeSingle(),
+    const stampResultPromise = userId
+      ? supabase
+          .from('stamps')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('landmark_id', contentId)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null });
+
+    const [detailResult, imagesResult, introResult, stampResult] = await Promise.all([
+      supabase.from('landmark_combined').select('*').eq('contentid', contentId).maybeSingle(),
       supabase.from('landmark_image').select('*').eq('contentid', contentId).order('id'),
       supabase.from('landmark_intro').select('*').eq('contentid', contentId).maybeSingle(),
+      stampResultPromise,
     ]);
 
     if (detailResult.error) {
@@ -120,10 +173,16 @@ export class TourService {
       throw new InternalServerErrorException('Failed to fetch landmark intro');
     }
 
+    if (stampResult.error) {
+      this.logger.error(`Error checking stamp status: ${stampResult.error.message}`);
+      throw new InternalServerErrorException('Failed to fetch stamp status');
+    }
+
     return {
       detail: detailResult.data,
       images: imagesResult.data ?? [],
       intro: introResult.data ?? null,
+      isStamped: !!stampResult.data,
     };
   }
 
@@ -186,7 +245,7 @@ export class TourService {
   async getLandmarksByRegionNames(
     sidoName: string,
     sigunguName: string,
-  ): Promise<Database['public']['Tables']['landmark']['Row'][]> {
+  ): Promise<Database['public']['Tables']['landmark_combined']['Row'][]> {
     if (!sidoName || !sigunguName) {
       throw new BadRequestException('sido and sigugun are required');
     }
@@ -212,7 +271,7 @@ export class TourService {
     }
 
     const { data: landmarks, error } = await supabase
-      .from('landmark')
+      .from('landmark_combined')
       .select('*')
       .eq('areacode', mapped.area_code)
       .eq('sigungucode', mapped.sigungu_code)

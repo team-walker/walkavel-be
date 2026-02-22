@@ -1,20 +1,32 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
 export class RegionTokenDto {
-  @ApiPropertyOptional({ example: '' })
+  /**
+   * 지역 코드
+   * @example ""
+   */
   code?: string;
 
-  @ApiProperty({ example: '서울특별시' })
+  /**
+   * 전체 지역명
+   * @example "서울특별시"
+   */
   longName: string;
 
-  @ApiProperty({ example: '서울특별시' })
+  /**
+   * 축약 지역명
+   * @example "서울특별시"
+   */
   shortName: string;
 
-  @ApiProperty({ example: ['SIDO'] })
+  /**
+   * 지역 유형
+   * @example ["SIDO"]
+   */
   types: string[];
 }
 
 export class LandmarksByRegionRequestDto {
-  @ApiProperty({ type: [RegionTokenDto] })
+  /**
+   * 지역 목록
+   */
   regions: RegionTokenDto[];
 }

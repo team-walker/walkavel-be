@@ -6,8 +6,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { PG_FOREIGN_KEY_VIOLATION, PG_UNIQUE_VIOLATION } from '../common/constants/postgres-errors';
 import { SupabaseService } from '../supabase/supabase.service';
-import { BookmarkWithLandmark } from './interfaces/bookmark.interface';
+import { BookmarkResponseDto } from './dto/bookmark-response.dto';
 
 @Injectable()
 export class BookmarkService {
@@ -19,7 +20,7 @@ export class BookmarkService {
     return this.supabaseService.getClient();
   }
 
-  async addBookmark(userId: string, contentId: number): Promise<BookmarkWithLandmark> {
+  async addBookmark(userId: string, contentId: number): Promise<BookmarkResponseDto> {
     const { data, error } = await this.client
       .from('bookmark')
       .insert({
@@ -32,10 +33,10 @@ export class BookmarkService {
         userId:userid,
         contentId:contentid,
         createdAt:created_at,
-        landmark (
-          contentId:contentid,
+        landmark:landmark_combined (
+          contentid,
           title,
-          firstImage:firstimage,
+          firstimage,
           addr1,
           cat1,
           cat2,
@@ -46,8 +47,8 @@ export class BookmarkService {
       .single();
 
     if (error) {
-      if (error.code === '23503') {
-        if (error.message.includes('bookmark_landmark_fk')) {
+      if (error.code === PG_FOREIGN_KEY_VIOLATION) {
+        if (error.message.includes('contentid') || error.message.includes('landmark')) {
           throw new NotFoundException('Landmark content does not exist');
         }
         this.logger.error(`Foreign key violation: ${error.message}`);
@@ -55,13 +56,13 @@ export class BookmarkService {
           'Data inconsistency detected while adding bookmark.',
         );
       }
-      if (error.code === '23505') {
+      if (error.code === PG_UNIQUE_VIOLATION) {
         throw new ConflictException('Bookmark already exists');
       }
       this.logger.error(`Unexpected error while adding bookmark: ${error.message}`);
       throw new InternalServerErrorException('Failed to add bookmark');
     }
-    return data;
+    return data as unknown as BookmarkResponseDto;
   }
 
   async removeBookmark(userId: string, contentId: number): Promise<{ message: string }> {
@@ -87,7 +88,7 @@ export class BookmarkService {
     userId: string,
     limit: number,
     offset: number,
-  ): Promise<BookmarkWithLandmark[]> {
+  ): Promise<BookmarkResponseDto[]> {
     const { data, error } = await this.client
       .from('bookmark')
       .select(
@@ -96,10 +97,10 @@ export class BookmarkService {
         userId:userid,
         contentId:contentid,
         createdAt:created_at,
-        landmark (
-          contentId:contentid,
+        landmark:landmark_combined (
+          contentid,
           title,
-          firstImage:firstimage,
+          firstimage,
           addr1,
           cat1,
           cat2,
@@ -116,7 +117,7 @@ export class BookmarkService {
       throw new InternalServerErrorException('Failed to fetch bookmarks');
     }
 
-    return (data || []) as unknown as BookmarkWithLandmark[];
+    return (data || []) as unknown as BookmarkResponseDto[];
   }
 
   async isBookmarked(userId: string, contentId: number): Promise<{ isBookmarked: boolean }> {

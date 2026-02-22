@@ -1,168 +1,153 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Database } from '../../database.types';
+import { LandmarkDto } from './landmark.dto';
 
-export class LandmarkDetailDto {
-  @ApiProperty()
+type LandmarkImageRow = Database['public']['Tables']['landmark_image']['Row'];
+type LandmarkIntroRow = Database['public']['Tables']['landmark_intro']['Row'];
+
+export class LandmarkImageDto implements Partial<LandmarkImageRow> {
+  /**
+   * 이미지 ID
+   * @example 1
+   */
+  id: number;
+
+  /**
+   * 콘텐츠 ID
+   */
   contentid: number;
 
-  @ApiPropertyOptional()
-  contenttypeid?: number | null;
-
-  @ApiProperty()
-  title: string;
-
-  @ApiPropertyOptional()
-  addr1?: string | null;
-
-  @ApiPropertyOptional()
-  addr2?: string | null;
-
-  @ApiPropertyOptional()
-  zipcode?: string | null;
-
-  @ApiPropertyOptional()
-  tel?: string | null;
-
-  @ApiPropertyOptional()
-  areacode?: number | null;
-
-  @ApiPropertyOptional()
-  sigungucode?: number | null;
-
-  @ApiPropertyOptional()
-  cat1?: string | null;
-
-  @ApiPropertyOptional()
-  cat2?: string | null;
-
-  @ApiPropertyOptional()
-  cat3?: string | null;
-
-  @ApiPropertyOptional()
-  mapx?: number | null;
-
-  @ApiPropertyOptional()
-  mapy?: number | null;
-
-  @ApiPropertyOptional()
-  mlevel?: number | null;
-
-  @ApiPropertyOptional()
-  firstimage?: string | null;
-
-  @ApiPropertyOptional()
-  firstimage2?: string | null;
-
-  @ApiPropertyOptional()
-  cpyrhtdivcd?: string | null;
-
-  @ApiPropertyOptional()
-  createdtime?: string | null;
-
-  @ApiPropertyOptional()
-  modifiedtime?: string | null;
-
-  @ApiPropertyOptional()
-  ldongregncd?: number | null;
-
-  @ApiPropertyOptional()
-  ldongsigngucd?: number | null;
-
-  @ApiPropertyOptional()
-  lclssystm1?: string | null;
-
-  @ApiPropertyOptional()
-  lclssystm2?: string | null;
-
-  @ApiPropertyOptional()
-  lclssystm3?: string | null;
-
-  @ApiPropertyOptional()
-  homepage?: string | null;
-
-  @ApiPropertyOptional()
-  overview?: string | null;
-}
-
-export class LandmarkImageDto {
-  @ApiProperty()
-  contentid: number;
-
-  @ApiProperty()
+  /**
+   * 원본 이미지 URL
+   */
   originimgurl: string;
 
-  @ApiProperty()
+  /**
+   * 이미지 제목
+   */
   imgname: string;
 
-  @ApiPropertyOptional()
+  /**
+   * 썸네일 이미지 URL
+   */
   smallimageurl?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 저작권 유형
+   */
   cpyrhtdivcd?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 일련번호
+   */
   serialnum?: string | null;
 }
 
-export class LandmarkIntroDto {
-  @ApiProperty()
+export class LandmarkIntroDto implements Partial<LandmarkIntroRow> {
+  /**
+   * 콘텐츠 ID
+   */
   contentid: number;
 
-  @ApiProperty()
+  /**
+   * 콘텐츠 타입 ID
+   */
   contenttypeid: number;
 
-  @ApiPropertyOptional()
+  /**
+   * 세계문화유산 유무
+   */
   heritage1?: boolean | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 세계자연유산 유무
+   */
   heritage2?: boolean | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 세계기록유산 유무
+   */
   heritage3?: boolean | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 문의 및 안내
+   */
   infocenter?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 개장일
+   */
   opendate?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 쉬는날
+   */
   restdate?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 체험프로그램
+   */
   expguide?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 체험가능연령
+   */
   expagerange?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 수용인원
+   */
   accomcount?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 이용시기
+   */
   useseason?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 이용시간
+   */
   usetime?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 주차시설
+   */
   parking?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 유모차 대여 여부
+   */
   chkbabycarriage?: boolean | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 애완동물 동반 가능 여부
+   */
   chkpet?: boolean | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 신용카드 정보
+   */
   chkcreditcard?: boolean | null;
 }
 
 export class LandmarkDetailResponseDto {
-  @ApiProperty({ type: LandmarkDetailDto })
-  detail: LandmarkDetailDto;
+  /**
+   * 랜드마크 상세 정보 (기본 정보 + 개요)
+   */
+  detail: LandmarkDto;
 
-  @ApiProperty({ type: [LandmarkImageDto] })
+  /**
+   * 랜드마크 이미지 목록
+   */
   images: LandmarkImageDto[];
 
-  @ApiPropertyOptional({ type: LandmarkIntroDto, nullable: true })
+  /**
+   * 랜드마크 소개 정보
+   */
   intro?: LandmarkIntroDto | null;
+
+  /**
+   * 스탬프 획득 여부
+   * @example false
+   */
+  isStamped: boolean;
 }

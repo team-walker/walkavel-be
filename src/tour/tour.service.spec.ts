@@ -68,7 +68,7 @@ describe('TourService', () => {
         region_sigungu_map: {
           maybeSingle: { data: { area_code: 1, sigungu_code: 2 }, error: null },
         },
-        landmark: {
+        landmark_combined: {
           order: { data: [{ contentid: 1 }, { contentid: 2 }], error: null },
         },
       });
@@ -78,7 +78,7 @@ describe('TourService', () => {
 
       expect(result).toHaveLength(2);
       expect(supabase.from).toHaveBeenCalledWith('region_sigungu_map');
-      expect(supabase.from).toHaveBeenCalledWith('landmark');
+      expect(supabase.from).toHaveBeenCalledWith('landmark_combined');
     });
 
     it('throws BadRequest when missing params', async () => {
@@ -94,7 +94,7 @@ describe('TourService', () => {
   describe('getLandmarkDetail', () => {
     it('returns detail + images + intro', async () => {
       const supabase = createSupabaseMock({
-        landmark_detail: {
+        landmark_combined: {
           maybeSingle: { data: { contentid: 100, title: 'A' }, error: null },
         },
         landmark_image: {
@@ -111,11 +111,35 @@ describe('TourService', () => {
       expect(result.detail.contentid).toBe(100);
       expect(result.images).toHaveLength(2);
       expect(result.intro?.contentid).toBe(100);
+      expect(result.isStamped).toBe(false);
+    });
+
+    it('returns isStamped=true when user already has stamp', async () => {
+      const supabase = createSupabaseMock({
+        landmark_combined: {
+          maybeSingle: { data: { contentid: 100, title: 'A' }, error: null },
+        },
+        landmark_image: {
+          order: { data: [], error: null },
+        },
+        landmark_intro: {
+          maybeSingle: { data: null, error: null },
+        },
+        stamps: {
+          maybeSingle: { data: { id: 1 }, error: null },
+        },
+      });
+      (supabaseService.getClient as jest.Mock).mockReturnValue(supabase);
+
+      const result = await service.getLandmarkDetail(100, 'user-1');
+
+      expect(result.isStamped).toBe(true);
+      expect(supabase.from).toHaveBeenCalledWith('stamps');
     });
 
     it('throws NotFound when detail missing', async () => {
       const supabase = createSupabaseMock({
-        landmark_detail: {
+        landmark_combined: {
           maybeSingle: { data: null, error: null },
         },
       });
@@ -126,7 +150,7 @@ describe('TourService', () => {
 
     it('throws InternalServerError when images query fails', async () => {
       const supabase = createSupabaseMock({
-        landmark_detail: {
+        landmark_combined: {
           maybeSingle: { data: { contentid: 100 }, error: null },
         },
         landmark_image: {

@@ -10,7 +10,7 @@ export function setupSwagger(app: INestApplication): void {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('API Documentation')
+    .setTitle('API 문서')
     .setDescription('Walkavel API 명세서입니다.')
     .setVersion('1.0.0')
     .addBearerAuth()

@@ -1,78 +1,156 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Database } from '../../database.types';
 
-export class LandmarkDto {
-  @ApiProperty()
+type LandmarkRow = Database['public']['Tables']['landmark_combined']['Row'];
+
+export class LandmarkDto implements Partial<LandmarkRow> {
+  /**
+   * 콘텐츠 ID
+   * @example 126508
+   */
   contentid: number;
 
-  @ApiPropertyOptional()
+  /**
+   * 콘텐츠 타입 ID
+   * @example 12
+   */
   contenttypeid?: number | null;
 
-  @ApiProperty()
+  /**
+   * 제목
+   * @example "가야산"
+   */
   title: string;
 
-  @ApiPropertyOptional()
+  /**
+   * 주소1
+   * @example "경상남도 합천군"
+   */
   addr1?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 주소2
+   */
   addr2?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 우편번호
+   * @example "50200"
+   */
   zipcode?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 전화번호
+   * @example "055-930-8000"
+   */
   tel?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 지역 코드
+   * @example 36
+   */
   areacode?: number | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 시군구 코드
+   * @example 18
+   */
   sigungucode?: number | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 대분류
+   * @example "A01"
+   */
   cat1?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 중분류
+   * @example "A0101"
+   */
   cat2?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 소분류
+   * @example "A01010100"
+   */
   cat3?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * GPS X좌표 (경도)
+   * @example 128.123456
+   */
   mapx?: number | null;
 
-  @ApiPropertyOptional()
+  /**
+   * GPS Y좌표 (위도)
+   * @example 35.123456
+   */
   mapy?: number | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 지도 레벨
+   * @example 6
+   */
   mlevel?: number | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 대표 이미지 (원본)
+   */
   firstimage?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 대표 이미지 (썸네일)
+   */
   firstimage2?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 저작권 유형
+   */
   cpyrhtdivcd?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 등록일
+   * @example "20231010120000"
+   */
   createdtime?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 수정일
+   * @example "20231011120000"
+   */
   modifiedtime?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 법정동 코드
+   */
   ldongregncd?: number | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 법정동 시군구 코드
+   */
   ldongsigngucd?: number | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 지방자치단체 분류 1
+   */
   lclssystm1?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 지방자치단체 분류 2
+   */
   lclssystm2?: string | null;
 
-  @ApiPropertyOptional()
+  /**
+   * 지방자치단체 분류 3
+   */
   lclssystm3?: string | null;
+
+  /**
+   * 홈페이지 주소
+   */
+  homepage?: string | null;
+
+  /**
+   * 개요
+   */
+  overview?: string | null;
 }

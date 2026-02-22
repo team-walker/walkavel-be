@@ -16,6 +16,7 @@ type LandmarkRow = Pick<
   Database['public']['Tables']['landmark_combined']['Row'],
   'contentid' | 'title' | 'firstimage' | 'addr1' | 'cat1' | 'cat2' | 'cat3'
 >;
+type BookmarkLandmark = BookmarkResponseDto['landmark'];
 
 @Injectable()
 export class BookmarkService {
@@ -54,25 +55,26 @@ export class BookmarkService {
     const contentIds = [...new Set(bookmarks.map((bookmark) => bookmark.contentid))];
     const landmarkMap = await this.fetchLandmarkMap(contentIds);
 
-    return bookmarks.map((bookmark) => {
+    return bookmarks.map((bookmark): BookmarkResponseDto => {
       const landmark = landmarkMap.get(bookmark.contentid);
+      const mappedLandmark: BookmarkLandmark = landmark
+        ? {
+            contentId: landmark.contentid,
+            title: landmark.title,
+            firstImage: landmark.firstimage,
+            addr1: landmark.addr1,
+            cat1: landmark.cat1,
+            cat2: landmark.cat2,
+            cat3: landmark.cat3,
+          }
+        : null;
 
       return {
         id: bookmark.id,
         userId: bookmark.userid,
         contentId: bookmark.contentid,
         createdAt: bookmark.created_at,
-        landmark: landmark
-          ? {
-              contentid: landmark.contentid,
-              title: landmark.title,
-              firstimage: landmark.firstimage,
-              addr1: landmark.addr1,
-              cat1: landmark.cat1,
-              cat2: landmark.cat2,
-              cat3: landmark.cat3,
-            }
-          : null,
+        landmark: mappedLandmark,
       };
     });
   }

@@ -12,14 +12,14 @@ CREATE TABLE public.bookmark (
 ALTER TABLE public.bookmark ENABLE ROW LEVEL SECURITY;
 
 -- Policies
-CREATE POLICY "Users can view own bookmarks" 
-  ON public.bookmark FOR SELECT 
+CREATE POLICY "Users can view own bookmarks"
+  ON public.bookmark FOR SELECT
   USING (auth.uid() = userid);
 
-CREATE POLICY "Users can create own bookmarks" 
-  ON public.bookmark FOR INSERT 
+CREATE POLICY "Users can create own bookmarks"
+  ON public.bookmark FOR INSERT
   WITH CHECK (auth.uid() = userid);
 
-CREATE POLICY "Users can delete own bookmarks" 
-  ON public.bookmark FOR DELETE 
+CREATE POLICY "Users can delete own bookmarks"
+  ON public.bookmark FOR DELETE
   USING (auth.uid() = userid);

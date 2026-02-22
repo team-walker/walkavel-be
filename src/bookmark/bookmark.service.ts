@@ -9,6 +9,7 @@ import {
 import { PG_FOREIGN_KEY_VIOLATION, PG_UNIQUE_VIOLATION } from '../common/constants/postgres-errors';
 import { Database } from '../database.types';
 import { SupabaseService } from '../supabase/supabase.service';
+import type { LandmarkSummaryDto } from './dto/bookmark-response.dto';
 import { BookmarkResponseDto } from './dto/bookmark-response.dto';
 
 type BookmarkRow = Database['public']['Tables']['bookmark']['Row'];
@@ -16,7 +17,6 @@ type LandmarkRow = Pick<
   Database['public']['Tables']['landmark_combined']['Row'],
   'contentid' | 'title' | 'firstimage' | 'addr1' | 'cat1' | 'cat2' | 'cat3'
 >;
-type BookmarkLandmark = BookmarkResponseDto['landmark'];
 
 @Injectable()
 export class BookmarkService {
@@ -57,7 +57,7 @@ export class BookmarkService {
 
     return bookmarks.map((bookmark): BookmarkResponseDto => {
       const landmark = landmarkMap.get(bookmark.contentid);
-      const mappedLandmark: BookmarkLandmark = landmark
+      const mappedLandmark: LandmarkSummaryDto | null = landmark
         ? {
             contentId: landmark.contentid,
             title: landmark.title,

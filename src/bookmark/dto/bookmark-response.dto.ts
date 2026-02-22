@@ -1,4 +1,4 @@
-class LandmarkSummaryDto {
+export class LandmarkSummaryDto {
   /** @example 126508 */
   contentId: number;
 

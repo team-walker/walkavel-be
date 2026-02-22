@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 
 import { getErrorMessage, logErrorWithContext } from '../utils/error.util';
-import { LandmarkDetailEntity, LandmarkEntity } from './interfaces/landmark.interface';
+import { LandmarkCombinedEntity } from './interfaces/landmark.interface';
 import { LandmarkImageEntity } from './interfaces/landmark-image.interface';
 import { LandmarkIntroEntity } from './interfaces/landmark-intro.interface';
 import {
@@ -29,8 +29,8 @@ export class TourApiService {
     private readonly configService: ConfigService,
   ) {}
 
-  async fetchLandmarkList(numOfRows = this.DEFAULT_NUM_OF_ROWS): Promise<LandmarkEntity[]> {
-    const allItems: LandmarkEntity[] = [];
+  async fetchLandmarkList(numOfRows = this.DEFAULT_NUM_OF_ROWS): Promise<LandmarkCombinedEntity[]> {
+    const allItems: LandmarkCombinedEntity[] = [];
     let pageNo = 1;
 
     try {
@@ -60,7 +60,7 @@ export class TourApiService {
   private async fetchLandmarkListPage(
     pageNo: number,
     numOfRows: number,
-  ): Promise<{ items: LandmarkEntity[]; totalCount: number }> {
+  ): Promise<{ items: LandmarkCombinedEntity[]; totalCount: number }> {
     const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
     const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
     const url = `${baseUrl}/areaBasedList2`;
@@ -93,7 +93,9 @@ export class TourApiService {
       }
 
       const items = Array.isArray(rawItems) ? rawItems : [rawItems];
-      const entities = items.map((item: TourApiItem) => LandmarkMapper.toLandmarkEntity(item));
+      const entities = items.map((item: TourApiItem) =>
+        LandmarkMapper.toLandmarkCombinedEntity(item),
+      );
 
       return { items: entities, totalCount };
     } catch (e) {
@@ -102,7 +104,7 @@ export class TourApiService {
     }
   }
 
-  async fetchLandmarkDetail(contentId: number): Promise<LandmarkDetailEntity | null> {
+  async fetchLandmarkDetail(contentId: number): Promise<LandmarkCombinedEntity | null> {
     const baseUrl = this.configService.getOrThrow<string>('TOUR_API_URL');
     const serviceKey = this.configService.getOrThrow<string>('TOUR_API_KEY');
     const url = `${baseUrl}/detailCommon2`;
@@ -130,7 +132,7 @@ export class TourApiService {
 
       if (!item) return null;
 
-      return LandmarkMapper.toLandmarkDetailEntity(item);
+      return LandmarkMapper.toLandmarkCombinedEntityFromDetail(item);
     } catch (e) {
       logErrorWithContext(this.logger, `Failed to fetch detail for contentid: ${contentId}`, e);
       return null;

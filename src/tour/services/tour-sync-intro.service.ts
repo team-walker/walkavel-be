@@ -35,7 +35,7 @@ export class TourSyncIntroService {
     const { data: existingIntros } = await supabase.from('landmark_intro').select('contentid');
     const existingIds = new Set(existingIntros?.map((i) => i.contentid) || []);
 
-    const { data: landmarks, error } = await supabase.from('landmark').select('contentid');
+    const { data: landmarks, error } = await supabase.from('landmark_combined').select('contentid');
 
     if (error || !landmarks) {
       logErrorWithContext(this.logger, 'Error fetching landmarks for intro sync', error);

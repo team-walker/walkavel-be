@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 
+import { Database } from '../../database.types';
 import { SupabaseService } from '../../supabase/supabase.service';
-import { getErrorMessage, logErrorWithContext } from '../../utils/error.util';
-import { LandmarkDetailEntity } from '../interfaces/landmark.interface';
+import { logErrorWithContext } from '../../utils/error.util';
+import { LandmarkCombinedEntity } from '../interfaces/landmark.interface';
 import { TourApiService } from '../tour-api.service';
 
 @Injectable()
@@ -16,53 +17,19 @@ export class TourSyncDetailService {
     private readonly supabaseService: SupabaseService,
   ) {}
 
-  async syncLandmarkDetails() {
-    const supabase = this.supabaseService.getClient();
-
-    const { data: allLandmarks, error: listError } = await supabase
-      .from('landmark')
-      .select('contentid, modifiedtime');
-
-    const { data: allDetails, error: detailError } = await supabase
-      .from('landmark_detail')
-      .select('contentid, modifiedtime');
-
-    if (listError || detailError) {
-      logErrorWithContext(
-        this.logger,
-        'Error fetching data for change detection',
-        listError || detailError,
-      );
-      throw new Error(getErrorMessage(listError || detailError));
-    }
-
-    const detailMap = new Map(allDetails?.map((d) => [d.contentid, d.modifiedtime]) || []);
-
-    const toSync = allLandmarks.filter((l) => {
-      const detailModifiedTime = detailMap.get(l.contentid);
-
-      if (!detailModifiedTime) {
-        return true;
-      }
-
-      if (!l.modifiedtime) return false;
-
-      const isChanged = new Date(l.modifiedtime) > new Date(detailModifiedTime);
-      return isChanged;
-    });
-
-    this.logger.log(
-      `Found ${allLandmarks.length} total landmarks. ${toSync.length} need update based on modifiedtime comparison between landmark and landmark_detail.`,
-    );
-
-    if (toSync.length === 0) {
-      this.logger.log('All landmark details are already up to date.');
+  async syncLandmarkDetails(forceUpdateIds?: number[]) {
+    if (!forceUpdateIds || forceUpdateIds.length === 0) {
+      this.logger.log('No updated items to sync details for. Skipping.');
       return [];
     }
 
-    this.logger.log(`Starting detailed sync for ${toSync.length} items...`);
+    this.logger.log(
+      `Syncing details for ${forceUpdateIds.length} provided items (Forced update)...`,
+    );
 
-    let currentBatch: LandmarkDetailEntity[] = [];
+    const toSync = forceUpdateIds.map((id) => ({ contentid: id }));
+
+    let currentBatch: LandmarkCombinedEntity[] = [];
     let processedCount = 0;
     const processedIds: number[] = [];
 
@@ -101,15 +68,25 @@ export class TourSyncDetailService {
     return processedIds;
   }
 
-  private async upsertBatch(batch: LandmarkDetailEntity[]) {
+  private async upsertBatch(batch: LandmarkCombinedEntity[]) {
     const supabase = this.supabaseService.getClient();
-    const { error: upsertError } = await supabase
-      .from('landmark_detail')
-      .upsert(batch, { onConflict: 'contentid' });
+
+    const updates: Database['public']['Tables']['landmark_combined']['Insert'][] = batch.map(
+      (item) => ({
+        contentid: item.contentid,
+        homepage: item.homepage,
+        overview: item.overview,
+        title: item.title,
+      }),
+    );
+
+    const { error: upsertError } = await supabase.from('landmark_combined').upsert(updates, {
+      onConflict: 'contentid',
+    });
 
     if (upsertError) {
       logErrorWithContext(this.logger, 'Error upserting details', upsertError);
-      throw new Error(getErrorMessage(upsertError));
+      throw new InternalServerErrorException(`Failed to upsert details: ${upsertError.message}`);
     }
   }
 }

@@ -1,4 +1,4 @@
-export interface LandmarkEntity {
+export interface LandmarkCombinedEntity {
   contentid: number;
   contenttypeid: number | null;
   title: string;
@@ -24,9 +24,6 @@ export interface LandmarkEntity {
   lclssystm1: string | null;
   lclssystm2: string | null;
   lclssystm3: string | null;
-}
-
-export interface LandmarkDetailEntity extends LandmarkEntity {
-  homepage: string | null;
-  overview: string | null;
+  homepage?: string | null;
+  overview?: string | null;
 }

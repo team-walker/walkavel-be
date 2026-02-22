@@ -16,4 +16,9 @@ export class SyncTourDataResponseDto {
    * @example "Tour data synced successfully"
    */
   message?: string;
+
+  /** 업데이트된 콘텐츠 ID 목록
+   * @example [126508, 126509]
+   */
+  updatedIds?: number[];
 }

@@ -27,7 +27,7 @@ export interface Database {
             foreignKeyName: 'bookmark_landmark_fk';
             columns: ['contentid'];
             isOneToOne: false;
-            referencedRelation: 'landmark';
+            referencedRelation: 'landmark_combined';
             referencedColumns: ['contentid'];
           },
           {
@@ -39,91 +39,7 @@ export interface Database {
           },
         ];
       };
-      landmark: {
-        Row: {
-          contentid: number;
-          contenttypeid: number | null;
-          title: string;
-          addr1: string | null;
-          addr2: string | null;
-          zipcode: string | null;
-          tel: string | null;
-          areacode: number | null;
-          sigungucode: number | null;
-          cat1: string | null;
-          cat2: string | null;
-          cat3: string | null;
-          mapx: number | null;
-          mapy: number | null;
-          mlevel: number | null;
-          firstimage: string | null;
-          firstimage2: string | null;
-          cpyrhtdivcd: string | null;
-          createdtime: string | null;
-          modifiedtime: string | null;
-          ldongregncd: number | null;
-          ldongsigngucd: number | null;
-          lclssystm1: string | null;
-          lclssystm2: string | null;
-          lclssystm3: string | null;
-        };
-        Insert: {
-          contentid: number;
-          contenttypeid?: number | null;
-          title: string;
-          addr1?: string | null;
-          addr2?: string | null;
-          zipcode?: string | null;
-          tel?: string | null;
-          areacode?: number | null;
-          sigungucode?: number | null;
-          cat1?: string | null;
-          cat2?: string | null;
-          cat3?: string | null;
-          mapx?: number | null;
-          mapy?: number | null;
-          mlevel?: number | null;
-          firstimage?: string | null;
-          firstimage2?: string | null;
-          cpyrhtdivcd?: string | null;
-          createdtime?: string | null;
-          modifiedtime?: string | null;
-          ldongregncd?: number | null;
-          ldongsigngucd?: number | null;
-          lclssystm1?: string | null;
-          lclssystm2?: string | null;
-          lclssystm3?: string | null;
-        };
-        Update: {
-          contentid?: number;
-          contenttypeid?: number | null;
-          title?: string;
-          addr1?: string | null;
-          addr2?: string | null;
-          zipcode?: string | null;
-          tel?: string | null;
-          areacode?: number | null;
-          sigungucode?: number | null;
-          cat1?: string | null;
-          cat2?: string | null;
-          cat3?: string | null;
-          mapx?: number | null;
-          mapy?: number | null;
-          mlevel?: number | null;
-          firstimage?: string | null;
-          firstimage2?: string | null;
-          cpyrhtdivcd?: string | null;
-          createdtime?: string | null;
-          modifiedtime?: string | null;
-          ldongregncd?: number | null;
-          ldongsigngucd?: number | null;
-          lclssystm1?: string | null;
-          lclssystm2?: string | null;
-          lclssystm3?: string | null;
-        };
-        Relationships: [];
-      };
-      landmark_detail: {
+      landmark_combined: {
         Row: {
           contentid: number;
           contenttypeid: number | null;
@@ -246,7 +162,7 @@ export interface Database {
             foreignKeyName: 'landmark_image_contentid_fk';
             columns: ['contentid'];
             isOneToOne: false;
-            referencedRelation: 'landmark';
+            referencedRelation: 'landmark_combined';
             referencedColumns: ['contentid'];
           },
         ];
@@ -314,7 +230,7 @@ export interface Database {
             foreignKeyName: 'landmark_intro_contentid_fk';
             columns: ['contentid'];
             isOneToOne: true;
-            referencedRelation: 'landmark';
+            referencedRelation: 'landmark_combined';
             referencedColumns: ['contentid'];
           },
         ];
@@ -373,7 +289,7 @@ export interface Database {
             foreignKeyName: 'fk_stamps_landmark';
             columns: ['landmark_id'];
             isOneToOne: false;
-            referencedRelation: 'landmark';
+            referencedRelation: 'landmark_combined';
             referencedColumns: ['contentid'];
           },
           {

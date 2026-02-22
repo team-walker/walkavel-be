@@ -7,8 +7,15 @@ import {
 } from '@nestjs/common';
 
 import { PG_FOREIGN_KEY_VIOLATION, PG_UNIQUE_VIOLATION } from '../common/constants/postgres-errors';
+import { Database } from '../database.types';
 import { SupabaseService } from '../supabase/supabase.service';
 import { BookmarkResponseDto } from './dto/bookmark-response.dto';
+
+type BookmarkRow = Database['public']['Tables']['bookmark']['Row'];
+type LandmarkRow = Pick<
+  Database['public']['Tables']['landmark_combined']['Row'],
+  'contentid' | 'title' | 'firstimage' | 'addr1' | 'cat1' | 'cat2' | 'cat3'
+>;
 
 @Injectable()
 export class BookmarkService {
@@ -20,6 +27,56 @@ export class BookmarkService {
     return this.supabaseService.getClient();
   }
 
+  private async fetchLandmarkMap(contentIds: number[]): Promise<Map<number, LandmarkRow>> {
+    if (contentIds.length === 0) {
+      return new Map<number, LandmarkRow>();
+    }
+
+    const { data, error } = await this.client
+      .from('landmark_combined')
+      .select('contentid,title,firstimage,addr1,cat1,cat2,cat3')
+      .in('contentid', contentIds);
+
+    if (error) {
+      this.logger.error(`Failed to fetch landmarks: ${error.message}`);
+      throw new InternalServerErrorException('Failed to fetch bookmarks');
+    }
+
+    const map = new Map<number, LandmarkRow>();
+    for (const landmark of (data || []) as LandmarkRow[]) {
+      map.set(landmark.contentid, landmark);
+    }
+
+    return map;
+  }
+
+  private async enrichBookmarks(bookmarks: BookmarkRow[]): Promise<BookmarkResponseDto[]> {
+    const contentIds = [...new Set(bookmarks.map((bookmark) => bookmark.contentid))];
+    const landmarkMap = await this.fetchLandmarkMap(contentIds);
+
+    return bookmarks.map((bookmark) => {
+      const landmark = landmarkMap.get(bookmark.contentid);
+
+      return {
+        id: bookmark.id,
+        userId: bookmark.userid,
+        contentId: bookmark.contentid,
+        createdAt: bookmark.created_at,
+        landmark: landmark
+          ? {
+              contentid: landmark.contentid,
+              title: landmark.title,
+              firstimage: landmark.firstimage,
+              addr1: landmark.addr1,
+              cat1: landmark.cat1,
+              cat2: landmark.cat2,
+              cat3: landmark.cat3,
+            }
+          : null,
+      };
+    });
+  }
+
   async addBookmark(userId: string, contentId: number): Promise<BookmarkResponseDto> {
     const { data, error } = await this.client
       .from('bookmark')
@@ -27,23 +84,7 @@ export class BookmarkService {
         userid: userId,
         contentid: contentId,
       })
-      .select(
-        `
-        id,
-        userId:userid,
-        contentId:contentid,
-        createdAt:created_at,
-        landmark:landmark_combined (
-          contentid,
-          title,
-          firstimage,
-          addr1,
-          cat1,
-          cat2,
-          cat3
-        )
-      `,
-      )
+      .select('id,userid,contentid,created_at')
       .single();
 
     if (error) {
@@ -62,7 +103,9 @@ export class BookmarkService {
       this.logger.error(`Unexpected error while adding bookmark: ${error.message}`);
       throw new InternalServerErrorException('Failed to add bookmark');
     }
-    return data as unknown as BookmarkResponseDto;
+
+    const [bookmark] = await this.enrichBookmarks([data as BookmarkRow]);
+    return bookmark;
   }
 
   async removeBookmark(userId: string, contentId: number): Promise<{ message: string }> {
@@ -91,23 +134,7 @@ export class BookmarkService {
   ): Promise<BookmarkResponseDto[]> {
     const { data, error } = await this.client
       .from('bookmark')
-      .select(
-        `
-        id,
-        userId:userid,
-        contentId:contentid,
-        createdAt:created_at,
-        landmark:landmark_combined (
-          contentid,
-          title,
-          firstimage,
-          addr1,
-          cat1,
-          cat2,
-          cat3
-        )
-      `,
-      )
+      .select('id,userid,contentid,created_at')
       .eq('userid', userId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -117,7 +144,7 @@ export class BookmarkService {
       throw new InternalServerErrorException('Failed to fetch bookmarks');
     }
 
-    return (data || []) as unknown as BookmarkResponseDto[];
+    return this.enrichBookmarks((data || []) as BookmarkRow[]);
   }
 
   async isBookmarked(userId: string, contentId: number): Promise<{ isBookmarked: boolean }> {

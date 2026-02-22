@@ -5,7 +5,7 @@ CREATE TABLE public.bookmark (
   created_at timestamp with time zone null default now(),
   constraint bookmark_pkey primary key (id),
   constraint bookmark_user_content_unique unique (userid, contentid),
-  constraint bookmark_landmark_fk foreign KEY (contentid) references landmark (contentid),
+  constraint bookmark_landmark_fk foreign KEY (contentid) references landmark_combined (contentid),
   constraint bookmark_userid_fkey foreign KEY (userid) references auth.users (id)
 ) TABLESPACE pg_default;
 -- Enable Row Level Security

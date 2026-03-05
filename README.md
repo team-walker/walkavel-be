@@ -32,6 +32,7 @@
 
 - [✨ 서비스 소개](#-서비스-소개)
 - [🏗️ 시스템 아키텍처](#️-시스템-아키텍처)
+- [👥 BE 담당](#-be-담당)
 - [🛠️ 기술 스택](#️-기술-스택)
   - [🤔 기술적 의사결정](#-기술적-의사결정)
 - [📂 프로젝트 구조](#-프로젝트-구조)
@@ -74,6 +75,67 @@
 | **Backend** (Fly.io)       | NestJS 11 기반 REST API 서버. 인증, 스탬프, 북마크, 여행 데이터 제공 |
 | **Data & Auth** (Supabase) | PostgreSQL DB · OAuth 2.0 인증 · Storage 통합 관리                   |
 | **External APIs**          | 네이버 지도 API · 한국관광공사 Open API (랜드마크 데이터)            |
+
+---
+
+## 👥 BE 담당
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/jsyoon27">
+        <img src="https://avatars.githubusercontent.com/jsyoon27" width="80" alt="정성윤"/>
+      </a>
+    </td>
+    <td align="center">
+      <b>정성윤</b><br /><br />
+      🧑‍💻 부팀장<br />BE
+    </td>
+    <td>
+      • DB 초기 설정 및 OpenAPI 테스트<br />
+      • 지역별·상세 랜드마크 조회 API 구현<br />
+      • 상세 페이지 조회 API 스탬프 획득 여부 판별 로직 구현<br />
+      • OptionalAuthGuard로 비로그인 예외 처리<br />
+      • 스탬프 테이블 생성
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/JHParrrk">
+        <img src="https://avatars.githubusercontent.com/JHParrrk" width="80" alt="박준하"/>
+      </a>
+    </td>
+    <td align="center">
+      <b>박준하</b><br /><br />
+      🧑‍💻 팀원<br />BE · Infra
+    </td>
+    <td>
+      • Open API 데이터 동기화 시스템 및 Landmark Mapper 구현<br />
+      • DB 스키마 설계 및 TypeScript 타입 시스템 정비<br />
+      • 스탬프 생성 로직 개발 및 서버 배포 설정<br />
+      • 북마크 API 구현<br />
+      • fly.io CORS 오리진 환경변수 처리 및 설정<br />
+      • 테이블 통합 및 DB 업데이트 코드 리팩토링
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/YOJIN003">
+        <img src="https://avatars.githubusercontent.com/YOJIN003" width="80" alt="정여진"/>
+      </a>
+    </td>
+    <td align="center">
+      <b>정여진</b><br /><br />
+      🧑‍💻 팀원<br />BE
+    </td>
+    <td>
+      • Supabase 인증 토큰 검증 및 JWT 연동<br />
+      • 사용자 프로필·마이페이지 스탬프 요약 API 구현<br />
+      • 소셜 인증 보완 및 사용자 데이터 무결성 검증<br />
+      • 서비스 데이터 전수 검사 및 DB 관계 설정 보완
+    </td>
+  </tr>
+</table>
 
 ---
 

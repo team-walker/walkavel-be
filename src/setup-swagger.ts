@@ -6,7 +6,7 @@ export function setupSwagger(app: INestApplication): void {
   const configService = app.get(ConfigService);
   const oauth2RedirectUrl = configService.get<string>(
     'SWAGGER_OAUTH2_REDIRECT_URL',
-    'http://localhost:3001/docs/oauth2-redirect.html',
+    configService.get<string>('BASE_URL', 'http://localhost:3001') + '/docs/oauth2-redirect.html',
   );
 
   const config = new DocumentBuilder()
